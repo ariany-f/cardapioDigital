@@ -1,5 +1,4 @@
 <script setup>
-import Dropdown from '@/Components/Dropdown.vue';
 import GoogleMapEmbed from '@/Components/Maps/GoogleMapEmbed.vue';
 import TenantFormFields from '@/Components/Platform/TenantFormFields.vue';
 import PlatformLayout from '@/Layouts/PlatformLayout.vue';
@@ -196,8 +195,43 @@ const formatRestaurantRating = (summary) => {
 
     <div v-if="selectedTenant" class="mt-6 grid gap-4 lg:grid-cols-2">
         <div class="platform-card">
-            <h2 class="font-semibold">{{ selectedTenant.name }}</h2>
-            <p v-if="selectedTenant.legal_name" class="text-sm text-slate-600">{{ selectedTenant.legal_name }}</p>
+            <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                    <h2 class="font-semibold">{{ selectedTenant.name }}</h2>
+                    <p v-if="selectedTenant.legal_name" class="text-sm text-slate-600">{{ selectedTenant.legal_name }}</p>
+                </div>
+                <div class="flex shrink-0 flex-col items-end gap-2">
+                    <span
+                        class="rounded-full px-2.5 py-0.5 text-xs font-medium"
+                        :class="selectedTenant.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                    >
+                        {{ statusLabel(selectedTenant.status) }}
+                    </span>
+                    <button
+                        v-if="selectedTenant.status === 'active'"
+                        type="button"
+                        class="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+                        :disabled="suspendForm.processing"
+                        @click="confirmSuspend"
+                    >
+                        {{ suspendForm.processing ? 'Suspendendo...' : 'Suspender' }}
+                    </button>
+                    <button
+                        v-else
+                        type="button"
+                        class="rounded-lg border border-green-200 bg-white px-3 py-1.5 text-sm font-medium text-green-700 transition hover:bg-green-50"
+                        @click="confirmActivate"
+                    >
+                        Reativar
+                    </button>
+                </div>
+            </div>
+            <p
+                v-if="selectedTenant.status !== 'active' && selectedTenant.suspension_reason"
+                class="mt-2 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-800"
+            >
+                Motivo: {{ selectedTenant.suspension_reason }}
+            </p>
             <div class="mt-2 flex flex-wrap gap-1.5 text-xs">
                 <span
                     class="rounded-full px-2 py-0.5"

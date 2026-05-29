@@ -17,6 +17,7 @@ use Inertia\Response;
 
 class BranchController extends Controller
 {
+    use AppliesAdminListSearch;
     use HandlesBranchCoverUpload;
     use ValidatesBranch;
 
