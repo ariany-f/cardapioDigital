@@ -20,14 +20,7 @@ class DeliveryQuoteService
             ->orderBy('id')
             ->get();
 
-        $fee = 0.0;
         $zone = $this->matchZone($zones, $address);
-
-        if ($zone) {
-            $fee = (float) $zone->delivery_fee;
-        } elseif ($zones->isNotEmpty()) {
-            $fee = (float) $zones->first()->delivery_fee;
-        }
 
         if ($zone && $zone->type === 'neighborhood' && $address) {
             $neighborhoods = $zone->rules['neighborhoods'] ?? [];
@@ -44,10 +37,19 @@ class DeliveryQuoteService
         }
 
         $distanceKm = null;
-        if ($branch->latitude && $branch->longitude && $branch->delivery_radius_km) {
+        $needsDistance = ($zone && $zone->type === 'per_km')
+            || ($branch->latitude && $branch->longitude && $branch->delivery_radius_km);
+
+        if ($needsDistance) {
             if ($customerLat === null || $customerLng === null) {
                 throw ValidationException::withMessages([
                     'delivery_lat' => ['Ative a localização no navegador para calcular a entrega.'],
+                ]);
+            }
+
+            if (! $branch->latitude || ! $branch->longitude) {
+                throw ValidationException::withMessages([
+                    'delivery_lat' => ['Esta filial ainda não tem coordenadas cadastradas para calcular entrega por km.'],
                 ]);
             }
 
@@ -58,7 +60,7 @@ class DeliveryQuoteService
                 $customerLng,
             );
 
-            if ($distanceKm > (float) $branch->delivery_radius_km) {
+            if ($branch->delivery_radius_km && $distanceKm > (float) $branch->delivery_radius_km) {
                 throw ValidationException::withMessages([
                     'delivery_lat' => [
                         sprintf('Endereço fora da área de entrega (%.1f km; máximo %.1f km).', $distanceKm, $branch->delivery_radius_km),
@@ -66,6 +68,8 @@ class DeliveryQuoteService
                 ]);
             }
         }
+
+        $fee = $this->resolveFee($zone, $zones, $distanceKm);
 
         $minOverride = $zone?->min_order_override;
 
@@ -96,7 +100,38 @@ class DeliveryQuoteService
             }
         }
 
-        return $zones->firstWhere('type', 'flat') ?? $zones->first();
+        return $zones->firstWhere('type', 'flat')
+            ?? $zones->firstWhere('type', 'per_km')
+            ?? $zones->first();
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, DeliveryZone>  $zones
+     */
+    protected function resolveFee(?DeliveryZone $zone, $zones, ?float $distanceKm): float
+    {
+        if ($zone && $zone->type === 'per_km') {
+            if ($distanceKm === null) {
+                throw ValidationException::withMessages([
+                    'delivery_lat' => ['Ative a localização no navegador para calcular a entrega por km.'],
+                ]);
+            }
+
+            $base = (float) $zone->delivery_fee;
+            $perKm = (float) ($zone->rules['fee_per_km'] ?? 0);
+
+            return round($base + ($distanceKm * $perKm), 2);
+        }
+
+        if ($zone) {
+            return (float) $zone->delivery_fee;
+        }
+
+        if ($zones->isNotEmpty()) {
+            return (float) $zones->first()->delivery_fee;
+        }
+
+        return 0.0;
     }
 
     protected function distanceKm(float $lat1, float $lng1, float $lat2, float $lng2): float

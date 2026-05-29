@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\DeliveryZone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -35,6 +36,7 @@ class DeliveryZoneController extends Controller
                     'name' => $z->name,
                     'type' => $z->type,
                     'rules' => $z->rules,
+                    'fee_per_km' => $z->rules['fee_per_km'] ?? null,
                     'delivery_fee' => $z->delivery_fee,
                     'min_order_override' => $z->min_order_override,
                     'is_active' => $z->is_active,
@@ -84,17 +86,35 @@ class DeliveryZoneController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'in:flat,neighborhood'],
-            'delivery_fee' => ['required', 'numeric', 'min:0'],
+            'type' => ['required', 'in:flat,neighborhood,per_km'],
+            'delivery_fee' => [
+                Rule::requiredIf(fn () => $request->input('type') !== 'per_km'),
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
+            'fee_per_km' => [
+                Rule::requiredIf(fn () => $request->input('type') === 'per_km'),
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
             'min_order_override' => ['nullable', 'numeric', 'min:0'],
             'is_active' => ['boolean'],
             'neighborhoods_text' => ['nullable', 'string'],
         ]);
 
+        if ($data['type'] === 'per_km') {
+            $data['delivery_fee'] = $data['delivery_fee'] ?? 0;
+        }
+
         $rules = [];
         if ($data['type'] === 'neighborhood') {
             $lines = preg_split('/[\r\n,;]+/', $data['neighborhoods_text'] ?? '');
             $rules['neighborhoods'] = array_values(array_filter(array_map('trim', $lines)));
+        }
+        if ($data['type'] === 'per_km') {
+            $rules['fee_per_km'] = (float) $data['fee_per_km'];
         }
 
         return [

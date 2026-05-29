@@ -160,6 +160,16 @@ class DemoSeeder extends Seeder
             ]
         );
 
+        DeliveryZone::withoutGlobalScopes()->updateOrCreate(
+            ['tenant_id' => $tenant->id, 'branch_id' => $branch->id, 'name' => 'Por distância'],
+            [
+                'type' => 'per_km',
+                'rules' => ['fee_per_km' => 1.50],
+                'delivery_fee' => 4.00,
+                'is_active' => false,
+            ]
+        );
+
         DiningTable::withoutGlobalScopes()->updateOrCreate(
             ['tenant_id' => $tenant->id, 'branch_id' => $branch->id, 'name' => 'Mesa 01'],
             ['qr_token' => 'mesa01demo']
