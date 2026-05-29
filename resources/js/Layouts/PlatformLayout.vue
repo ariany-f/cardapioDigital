@@ -104,7 +104,7 @@ const logout = () => router.post(route('logout'));
                 </button>
             </header>
 
-            <main class="flex-1 px-4 py-6 lg:px-8 lg:py-8">
+            <main class="min-h-0 flex-1 overflow-y-auto px-4 py-6 lg:px-8 lg:py-8">
                 <div
                     v-if="page.props.flash?.success"
                     class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
