@@ -1,5 +1,6 @@
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import { useAdminOrdersPending } from '@/composables/useAdminOrdersPending';
 import { usePermissions } from '@/composables/usePermissions';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 

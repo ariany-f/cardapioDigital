@@ -45,27 +45,27 @@ class AdminOrdersPendingCountTest extends TestCase
 
     public function test_pending_count_returns_orders_awaiting_approval(): void
     {
-        Order::withoutGlobalScopes()->create([
-            'tenant_id' => $this->tenant->id,
-            'branch_id' => $this->branch->id,
-            'order_number' => 'LOJA-0001',
-            'status' => 'pending_approval',
-            'subtotal' => 10,
-            'total' => 10,
-        ]);
-        Order::withoutGlobalScopes()->create([
-            'tenant_id' => $this->tenant->id,
-            'branch_id' => $this->branch->id,
-            'order_number' => 'LOJA-0002',
-            'status' => 'pending_approval',
-            'subtotal' => 20,
-            'total' => 20,
-        ]);
+        foreach (['LOJA-0001', 'LOJA-0002'] as $number) {
+            Order::withoutGlobalScopes()->create([
+                'tenant_id' => $this->tenant->id,
+                'branch_id' => $this->branch->id,
+                'order_number' => $number,
+                'type' => 'pickup',
+                'status' => 'pending_approval',
+                'guest_name' => 'Cliente',
+                'guest_phone' => '11999999999',
+                'subtotal' => 10,
+                'total' => 10,
+            ]);
+        }
         Order::withoutGlobalScopes()->create([
             'tenant_id' => $this->tenant->id,
             'branch_id' => $this->branch->id,
             'order_number' => 'LOJA-0003',
+            'type' => 'pickup',
             'status' => 'confirmed',
+            'guest_name' => 'Cliente',
+            'guest_phone' => '11999999999',
             'subtotal' => 30,
             'total' => 30,
         ]);
