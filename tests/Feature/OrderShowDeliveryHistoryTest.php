@@ -11,6 +11,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Support\TenantFeatures;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class OrderShowDeliveryHistoryTest extends TestCase
@@ -26,6 +27,8 @@ class OrderShowDeliveryHistoryTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        Permission::findOrCreate('orders.view');
 
         $this->tenant = Tenant::create(['name' => 'Loja', 'slug' => 'loja', 'status' => 'active']);
         $this->branch = Branch::withoutGlobalScopes()->create([
