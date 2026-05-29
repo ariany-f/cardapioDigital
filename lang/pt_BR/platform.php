@@ -20,6 +20,26 @@ return [
         'email_footer' => 'App Cardápio — ferramenta de cardápio e comunicação. Questões sobre o pedido devem ser resolvidas diretamente com o restaurante.',
     ],
 
+    'plans' => [
+        'page_title' => 'Planos SaaS',
+        'intro' => 'Recursos incluídos em cada plano. O módulo de entregadores libera o cadastro de motoboys do restaurante — não há frota da plataforma.',
+        'slug' => 'Identificador',
+        'per_month' => '/mês',
+        'edit' => 'Editar',
+        'save' => 'Salvar',
+        'active' => 'Ativo',
+        'yes' => 'Sim',
+        'no' => 'Não',
+        'features' => [
+            'max_branches' => 'Filiais máximas',
+            'delivery_webhooks' => 'Webhooks de entrega',
+            'kds' => 'KDS (cozinha)',
+            'reports' => 'Relatórios',
+            'pos' => 'PDV / balcão',
+            'motoboys' => 'Módulo de entregadores',
+        ],
+    ],
+
     'delivery' => [
         'onboarding_title' => 'Entrega própria — sem frota da plataforma',
         'onboarding_body' => 'O App Cardápio não possui entregadores nem realiza entregas. Quem vende pelo cardápio precisa organizar a logística (equipe própria, motoboy contratado, retirada no balcão, etc.). O sistema apenas registra pedidos e, quando disponível, ajuda o restaurante a atribuir entregadores que ele mesmo cadastrou.',

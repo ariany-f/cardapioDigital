@@ -1,11 +1,14 @@
 <script setup>
 import PlatformLayout from '@/Layouts/PlatformLayout.vue';
+import { usePlanFeatures } from '@/composables/usePlanFeatures';
 import { Head, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 defineOptions({ layout: PlatformLayout });
 
-const props = defineProps({ plans: Array });
+defineProps({ plans: Array });
+
+const { t, listFeatures } = usePlanFeatures();
 const editingId = ref(null);
 
 const form = useForm({
@@ -25,33 +28,43 @@ const startEdit = (plan) => {
 
 const submit = (plan) =>
     form.put(route('platform.plans.update', plan.id), { onSuccess: () => (editingId.value = null) });
+
+const formatPrice = (value) =>
+    parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 </script>
 
 <template>
-    <Head title="Planos" />
-    <h1 class="text-2xl font-bold text-slate-900">Planos SaaS</h1>
-    <p class="mt-1 text-sm text-stone-500">
-        Recursos por plano (kds, pos, reports, webhooks, motoboys, max_branches). O módulo motoboys libera cadastro
-        de entregadores do restaurante — não há frota da plataforma.
-    </p>
+    <Head :title="t('page_title')" />
+    <h1 class="text-2xl font-bold text-slate-900">{{ t('page_title') }}</h1>
+    <p class="mt-1 text-sm text-stone-500">{{ t('intro') }}</p>
 
     <div class="mt-6 grid gap-4 md:grid-cols-3">
         <article v-for="plan in plans" :key="plan.id" class="admin-card">
             <h2 class="text-lg font-semibold">{{ plan.name }}</h2>
-            <p class="text-sm text-stone-500">slug: {{ plan.slug }}</p>
-            <p class="mt-2 text-2xl font-bold">R$ {{ parseFloat(plan.price_monthly).toFixed(2) }}/mês</p>
-            <ul class="mt-3 space-y-1 text-xs text-stone-600">
-                <li v-for="(val, key) in plan.features_json" :key="key">{{ key }}: {{ val }}</li>
+            <p class="text-sm text-stone-500">{{ t('slug') }}: {{ plan.slug }}</p>
+            <p class="mt-2 text-2xl font-bold">
+                {{ formatPrice(plan.price_monthly) }}<span class="text-base font-normal text-stone-500">{{ t('per_month') }}</span>
+            </p>
+            <ul class="mt-3 space-y-1.5 text-sm text-stone-700">
+                <li v-for="feature in listFeatures(plan.features_json)" :key="feature.key" class="flex justify-between gap-2">
+                    <span class="text-stone-600">{{ feature.label }}</span>
+                    <span class="font-medium text-stone-900">{{ feature.value }}</span>
+                </li>
             </ul>
-            <button type="button" class="admin-btn-secondary mt-4 text-sm" @click="startEdit(plan)">Editar</button>
+            <button type="button" class="admin-btn-secondary mt-4 text-sm" @click="startEdit(plan)">
+                {{ t('edit') }}
+            </button>
 
             <form v-if="editingId === plan.id" class="mt-4 space-y-2 border-t pt-4" @submit.prevent="submit(plan)">
                 <input v-model="form.name" class="admin-input" />
                 <input v-model="form.price_monthly" type="number" step="0.01" class="admin-input" />
                 <label class="flex items-center gap-2 text-sm">
-                    <input v-model="form.is_active" type="checkbox" /> Ativo
+                    <input v-model="form.is_active" type="checkbox" />
+                    {{ t('active') }}
                 </label>
-                <button type="submit" class="admin-btn-primary w-full" :disabled="form.processing">Salvar</button>
+                <button type="submit" class="admin-btn-primary w-full" :disabled="form.processing">
+                    {{ t('save') }}
+                </button>
             </form>
         </article>
     </div>
