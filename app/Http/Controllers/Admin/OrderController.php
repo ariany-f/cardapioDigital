@@ -14,6 +14,7 @@ use App\Services\DeliveryConfirmationService;
 use App\Services\OrderCorrectionService;
 use App\Services\OrderPaymentService;
 use App\Support\TenantContext;
+use App\Support\TenantFeatures;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
