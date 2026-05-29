@@ -125,8 +125,11 @@ const formatRestaurantRating = (summary) => {
             :currencies="currencies"
             :timezones="timezones"
         />
-        <div class="border-t border-slate-100 pt-4">
-            <button type="submit" class="platform-btn-primary" :disabled="createForm.processing">Salvar</button>
+        <div class="flex gap-3 border-t border-slate-100 pt-4">
+            <Link :href="route('platform.tenants.index')" class="platform-btn-secondary">Cancelar</Link>
+            <button type="submit" class="platform-btn-primary" :disabled="createForm.processing">
+                {{ createForm.processing ? 'Salvando...' : 'Salvar cadastro' }}
+            </button>
         </div>
     </form>
 
