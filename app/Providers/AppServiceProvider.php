@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\Mail\PlatformMailConfigurator;
+use App\Services\Storage\PlatformStorageConfigurator;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -31,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
         $this->warnIfDebugInProduction();
 
         $this->app->make(PlatformMailConfigurator::class)->apply();
+        $this->app->make(PlatformStorageConfigurator::class)->apply();
 
         Vite::prefetch(concurrency: 3);
 

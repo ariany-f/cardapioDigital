@@ -4,6 +4,7 @@ use App\Http\Controllers\Platform\MarketingLeadController;
 use App\Http\Controllers\Platform\PlanController;
 use App\Http\Controllers\Platform\PlatformGoogleMapsSettingsController;
 use App\Http\Controllers\Platform\PlatformMailSettingsController;
+use App\Http\Controllers\Platform\PlatformStorageSettingsController;
 use App\Http\Controllers\Platform\PlatformSeoSettingsController;
 use App\Http\Controllers\Platform\TenantSeoController;
 use App\Http\Controllers\Platform\PlatformCustomerController;
@@ -63,6 +64,10 @@ Route::prefix('platform')->name('platform.')->group(function () {
 
         Route::get('settings/maps', [PlatformGoogleMapsSettingsController::class, 'edit'])->name('settings.maps');
         Route::put('settings/maps', [PlatformGoogleMapsSettingsController::class, 'update'])->name('settings.maps.update');
+
+        Route::get('settings/storage', [PlatformStorageSettingsController::class, 'edit'])->name('settings.storage');
+        Route::put('settings/storage', [PlatformStorageSettingsController::class, 'update'])->name('settings.storage.update');
+        Route::post('settings/storage/test', [PlatformStorageSettingsController::class, 'testConnection'])->name('settings.storage.test');
 
         Route::get('tenants/{tenant}/seo', [TenantSeoController::class, 'edit'])->name('tenants.seo.edit');
         Route::put('tenants/{tenant}/seo', [TenantSeoController::class, 'update'])->name('tenants.seo.update');

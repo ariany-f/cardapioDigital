@@ -17,6 +17,7 @@ const nav = [
     { label: 'Pagamentos', route: 'platform.payments.index', icon: 'payment' },
     { label: 'Avaliações', route: 'platform.ratings.index', icon: 'chart' },
     { label: 'E-mail (SMTP)', route: 'platform.settings.email', icon: 'message' },
+    { label: 'Armazenamento (S3)', route: 'platform.settings.storage', icon: 'box' },
     { label: 'SEO', route: 'platform.settings.seo', icon: 'globe' },
     { label: 'Google Maps', route: 'platform.settings.maps', icon: 'map-pin' },
 ].map((item) => ({

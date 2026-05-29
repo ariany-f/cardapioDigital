@@ -9,13 +9,14 @@ class TenantLogoStorage
 {
     public static function store(UploadedFile $file, int $tenantId): string
     {
-        return $file->store("tenants/{$tenantId}/logo", 'public');
+        return $file->store("tenants/{$tenantId}/logo", [
+            'disk' => PlatformStorage::uploadDisk(),
+            'visibility' => 'public',
+        ]);
     }
 
     public static function delete(?string $path): void
     {
-        if ($path) {
-            Storage::disk('public')->delete($path);
-        }
+        PlatformStorage::deletePath($path);
     }
 }

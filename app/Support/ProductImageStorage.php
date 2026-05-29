@@ -9,13 +9,14 @@ class ProductImageStorage
 {
     public static function store(UploadedFile $file, int $tenantId, int $productId): string
     {
-        return $file->store("tenants/{$tenantId}/products/{$productId}", 'public');
+        return $file->store("tenants/{$tenantId}/products/{$productId}", [
+            'disk' => PlatformStorage::uploadDisk(),
+            'visibility' => 'public',
+        ]);
     }
 
     public static function delete(?string $path): void
     {
-        if ($path) {
-            Storage::disk('public')->delete($path);
-        }
+        PlatformStorage::deletePath($path);
     }
 }

@@ -12,15 +12,14 @@ class BranchCoverStorage
     {
         $name = 'hero-'.Str::uuid().'.'.$file->getClientOriginalExtension();
 
-        return $file->storeAs("tenants/{$tenantId}/branches/{$branchSlug}", $name, 'public');
+        return $file->storeAs("tenants/{$tenantId}/branches/{$branchSlug}", $name, [
+            'disk' => PlatformStorage::uploadDisk(),
+            'visibility' => 'public',
+        ]);
     }
 
     public static function delete(?string $path): void
     {
-        if (! $path || str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
-            return;
-        }
-
-        Storage::disk('public')->delete($path);
+        PlatformStorage::deletePath($path);
     }
 }
