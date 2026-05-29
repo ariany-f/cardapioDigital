@@ -12,6 +12,9 @@ const apply = (q) => router.get(route('platform.customers.index'), { q: q || und
 <template>
     <Head title="Clientes — Plataforma" />
     <h1 class="text-2xl font-bold text-slate-900">Clientes (conta global)</h1>
+    <p class="mt-1 text-sm text-slate-500">
+        Contas que podem pedir em vários restaurantes da plataforma. Suporte sobre pedidos específicos é do restaurante onde comprou.
+    </p>
 
     <input
         type="search"

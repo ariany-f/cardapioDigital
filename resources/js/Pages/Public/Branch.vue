@@ -13,7 +13,7 @@ import {
     saveBranchSession,
 } from '@/composables/useMenuSession';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 
 defineOptions({ layout: PublicMenuLayout });
 
@@ -121,6 +121,7 @@ const mobileCartOpen = ref(false);
 const processing = ref(false);
 const desktopCartRef = ref(null);
 const mobileCartRef = ref(null);
+const catalogScrollRef = ref(null);
 
 const branchOpen = computed(() => props.branch?.can_order === true);
 const guestCheckoutEnabled = computed(() => props.branch?.guest_checkout_enabled !== false);
@@ -230,16 +231,36 @@ const decrementItem = (item) => {
     else found.quantity--;
 };
 
+const usesCatalogScrollPane = () =>
+    typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches;
+
 const scrollToCategory = (id) => {
     activeCategory.value = id;
-    document.getElementById(`category-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const el = document.getElementById(`category-${id}`);
+    if (!el) return;
+
+    const root = catalogScrollRef.value;
+    if (usesCatalogScrollPane() && root) {
+        const top = el.getBoundingClientRect().top - root.getBoundingClientRect().top + root.scrollTop;
+        root.scrollTo({ top: Math.max(0, top - 12), behavior: 'smooth' });
+        return;
+    }
+
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
 let observer;
 
-onMounted(() => {
-    const sections = props.categories.map((c) => document.getElementById(`category-${c.id}`)).filter(Boolean);
+const bindCategoryObserver = () => {
+    observer?.disconnect();
+
+    const sections = (searchQuery.value.trim() ? filteredCategories.value : props.categories)
+        .map((c) => document.getElementById(`category-${c.id}`))
+        .filter(Boolean);
+
     if (!sections.length) return;
+
+    const root = usesCatalogScrollPane() ? catalogScrollRef.value : null;
 
     observer = new IntersectionObserver(
         (entries) => {
@@ -249,11 +270,19 @@ onMounted(() => {
                 if (id) activeCategory.value = id;
             }
         },
-        { rootMargin: '-30% 0px -55% 0px', threshold: [0, 0.25, 0.5] },
+        {
+            root,
+            rootMargin: root ? '-8% 0px -55% 0px' : '-30% 0px -55% 0px',
+            threshold: [0, 0.25, 0.5],
+        },
     );
 
     sections.forEach((el) => observer.observe(el));
-});
+};
+
+onMounted(() => nextTick(() => bindCategoryObserver()));
+
+watch([filteredCategories, searchQuery], () => nextTick(() => bindCategoryObserver()));
 
 onUnmounted(() => observer?.disconnect());
 
@@ -496,9 +525,14 @@ const chatEnabled = computed(() => props.chatAvailable);
             </nav>
         </aside>
 
-        <!-- Products -->
-        <div class="min-w-0 flex-1 pb-28 lg:pb-8">
-            <div v-if="categories.length" class="mb-4">
+        <!-- Products: busca fixa + lista com rolagem própria (desktop) -->
+        <div
+            class="min-w-0 flex-1 pb-28 lg:sticky lg:top-20 lg:flex lg:max-h-[calc(100vh-5.5rem)] lg:min-h-0 lg:flex-col lg:pb-0"
+        >
+            <div
+                v-if="categories.length"
+                class="mb-4 shrink-0 sticky top-[7.25rem] z-10 bg-[var(--menu-bg)]/95 py-1 backdrop-blur-md lg:static lg:z-auto lg:border-b lg:border-stone-200/80 lg:bg-[var(--menu-bg)] lg:py-0"
+            >
                 <label class="sr-only" for="menu-search">Buscar no cardápio</label>
                 <div class="relative">
                     <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">
@@ -522,39 +556,48 @@ const chatEnabled = computed(() => props.chatAvailable);
                 </div>
             </div>
 
-            <div v-if="!categories.length" class="rounded-2xl border border-dashed border-stone-300 bg-white p-12 text-center">
-                <p class="font-display text-lg text-stone-600">Cardápio em breve</p>
-                <p class="mt-2 text-sm text-stone-400">Nenhum produto disponível nesta unidade.</p>
-            </div>
-
-            <p v-else-if="searchQuery && !filteredCategories.length" class="rounded-2xl bg-white p-8 text-center text-sm text-stone-500">
-                Nenhum item encontrado para “{{ searchQuery }}”.
-            </p>
-
-            <section
-                v-for="cat in filteredCategories"
-                :id="`category-${cat.id}`"
-                :key="cat.id"
-                class="scroll-mt-36 mb-10 lg:scroll-mt-28"
+            <div
+                ref="catalogScrollRef"
+                class="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-y-contain lg:pr-1 lg:pt-4"
             >
-                <h2 class="mb-4 font-display text-xl font-semibold text-stone-900 lg:text-2xl">{{ cat.name }}</h2>
-                <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:gap-4">
-                    <div v-for="product in cat.products" :key="product.id" class="min-w-0">
-                    <MenuProductCard
-                        :product="product"
-                        :can-order="canAddToCart"
-                        :quantity="getQty(product.id)"
-                        @add="requestAdd(product)"
-                        @increment="increment(product)"
-                        @decrement="decrementProduct(product)"
-                    />
-                    </div>
+                <div v-if="!categories.length" class="rounded-2xl border border-dashed border-stone-300 bg-white p-12 text-center">
+                    <p class="font-display text-lg text-stone-600">Cardápio em breve</p>
+                    <p class="mt-2 text-sm text-stone-400">Nenhum produto disponível nesta unidade.</p>
                 </div>
-            </section>
+
+                <p
+                    v-else-if="searchQuery && !filteredCategories.length"
+                    class="rounded-2xl bg-white p-8 text-center text-sm text-stone-500"
+                >
+                    Nenhum item encontrado para “{{ searchQuery }}”.
+                </p>
+
+                <section
+                    v-for="cat in filteredCategories"
+                    :id="`category-${cat.id}`"
+                    :key="cat.id"
+                    class="mb-10 scroll-mt-36 lg:scroll-mt-4"
+                >
+                    <h2 class="mb-4 font-display text-xl font-semibold text-stone-900 lg:text-2xl">{{ cat.name }}</h2>
+                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:gap-4">
+                        <div v-for="product in cat.products" :key="product.id" class="min-w-0">
+                            <MenuProductCard
+                                :product="product"
+                                :can-order="canAddToCart"
+                                :quantity="getQty(product.id)"
+                                @add="requestAdd(product)"
+                                @increment="increment(product)"
+                                @decrement="decrementProduct(product)"
+                            />
+                        </div>
+                    </div>
+                </section>
+            </div>
         </div>
 
         <!-- Desktop cart -->
         <aside v-if="canAddToCart" class="hidden w-[22rem] shrink-0 lg:block xl:w-96">
+            <div class="sticky top-20 max-h-[calc(100vh-5.5rem)] overflow-y-auto overscroll-y-contain">
             <MenuCart
                 ref="desktopCartRef"
                 :cart="cart"
@@ -581,6 +624,7 @@ const chatEnabled = computed(() => props.chatAvailable);
                 @decrement="decrementItem"
                 @checkout="checkout"
             />
+            </div>
         </aside>
     </div>
 

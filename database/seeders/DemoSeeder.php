@@ -219,15 +219,25 @@ class DemoSeeder extends Seeder
             ['name' => 'Cliente Demo', 'phone' => '11999999999', 'password' => $password]
         );
 
-        CustomerAddress::withoutGlobalScopes()->firstOrCreate(
-            ['customer_id' => $customer->id, 'street' => 'Rua Demo'],
+        $demoDeliveryAddress = [
+            'street' => 'Rua Bela Cintra',
+            'number' => '1208',
+            'complement' => 'Apto 42',
+            'neighborhood' => 'Consolação',
+            'city' => 'São Paulo',
+            'state' => 'SP',
+            'postal_code' => '01314-002',
+        ];
+
+        CustomerAddress::withoutGlobalScopes()->updateOrCreate(
+            ['customer_id' => $customer->id, 'street' => $demoDeliveryAddress['street'], 'number' => $demoDeliveryAddress['number']],
             [
                 'tenant_id' => $tenant->id,
-                'number' => '100',
-                'neighborhood' => 'Bela Vista',
-                'city' => 'São Paulo',
-                'state' => 'SP',
-                'postal_code' => '01310-200',
+                'complement' => $demoDeliveryAddress['complement'],
+                'neighborhood' => $demoDeliveryAddress['neighborhood'],
+                'city' => $demoDeliveryAddress['city'],
+                'state' => $demoDeliveryAddress['state'],
+                'postal_code' => $demoDeliveryAddress['postal_code'],
                 'is_default' => true,
             ]
         );
@@ -303,6 +313,7 @@ class DemoSeeder extends Seeder
                 'guest_phone' => $customer->phone,
             ]
         );
+        $order->forceFill(['delivery_address' => $demoDeliveryAddress])->save();
 
         OrderItem::withoutGlobalScopes()->firstOrCreate(
             ['order_id' => $order->id, 'name' => 'X-Burger ACME'],

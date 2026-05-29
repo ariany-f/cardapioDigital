@@ -39,11 +39,9 @@ const statusClass = (status) => {
         <div>
             <h1 class="text-2xl font-bold tracking-tight text-slate-900">Solicitações da landing</h1>
             <p class="mt-1 text-sm text-slate-500">
-                Contatos enviados pelo formulário do site institucional — não são pedidos de clientes finais nos restaurantes.
-            </p>
-            <p class="mt-1 text-sm text-slate-500">
-                Pedidos de ativação enviados pelo formulário em
-                <a :href="route('marketing.landing')" target="_blank" class="text-indigo-600 hover:underline">/</a>.
+                Contatos do formulário da
+                <a :href="route('marketing.landing')" target="_blank" class="text-indigo-600 hover:underline">landing</a>
+                (interesse em contratar a plataforma) — não são pedidos de clientes finais nos restaurantes.
             </p>
         </div>
         <span

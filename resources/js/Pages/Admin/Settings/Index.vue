@@ -35,12 +35,47 @@ const form = useForm({
     logo: null,
 });
 
-const submit = () =>
+const syncFormFromProps = () => {
+    form.defaults({
+        guest_checkout_enabled: props.orderSettings?.guest_checkout_enabled ?? true,
+        motoboy_auto_accept_assignments: props.deliverySettings?.motoboy_auto_accept_assignments ?? false,
+        pix_enabled: props.paymentSettings?.pix_enabled ?? true,
+        pix_key_type: props.paymentSettings?.pix_key_type ?? 'phone',
+        pix_key: props.paymentSettings?.pix_key ?? '',
+        pix_beneficiary: props.paymentSettings?.pix_beneficiary ?? '',
+        card_online_enabled: props.paymentSettings?.card_online_enabled ?? false,
+        card_online_instructions: props.paymentSettings?.card_online_instructions ?? '',
+        name: props.settings?.name ?? '',
+        public_description: props.settings?.public_description ?? '',
+        phone: props.settings?.phone ?? '',
+        whatsapp: props.settings?.whatsapp ?? '',
+        website: props.settings?.website ?? '',
+        instagram: props.settings?.instagram ?? '',
+        theme_primary_color: props.settings?.theme_primary_color,
+        theme_secondary_color: props.settings?.theme_secondary_color,
+        logo: null,
+    });
+    form.reset();
+};
+
+const submit = () => {
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => syncFormFromProps(),
+        ...(form.logo ? { forceFormData: true } : {}),
+    };
+
     form
-        .transform((data) => ({ ...data, _method: 'put' }))
-        .post(route('tenant.admin.settings.update', { tenant: tenant.slug }), {
-            forceFormData: true,
-        });
+        .transform((data) => ({
+            ...data,
+            _method: 'put',
+            guest_checkout_enabled: data.guest_checkout_enabled ? 1 : 0,
+            pix_enabled: data.pix_enabled ? 1 : 0,
+            card_online_enabled: data.card_online_enabled ? 1 : 0,
+            motoboy_auto_accept_assignments: data.motoboy_auto_accept_assignments ? 1 : 0,
+        }))
+        .post(route('tenant.admin.settings.update', { tenant: tenant.slug }), options);
+};
 </script>
 
 <template>

@@ -36,6 +36,7 @@ class TenantSettingsController extends Controller
                 'logo_url' => MediaUrl::fromPath($tenant->logo_path),
             ],
             'deliverySettings' => TenantDeliverySettings::from($tenant),
+            'paymentSettings' => TenantPaymentSettings::from($tenant),
             'orderSettings' => TenantOrderSettings::from($tenant),
             'motoboys_enabled' => TenantFeatures::motoboysEnabled($tenant),
         ]);
