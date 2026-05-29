@@ -54,6 +54,9 @@ return [
         'pos_plan_blocked_edit' => 'O plano atual deste restaurante não inclui PDV na plataforma.',
         'kds_plan_blocked' => 'O plano selecionado não inclui KDS. Altere o plano ou mantenha o módulo desativado.',
         'kds_plan_blocked_edit' => 'O plano atual deste restaurante não inclui KDS na plataforma.',
+        'delete' => 'Excluir',
+        'delete_confirm' => 'Excluir permanentemente o plano ":name"? Esta ação não pode ser desfeita.',
+        'delete_has_subscriptions' => 'Não é possível excluir: existem restaurantes com assinatura neste plano. Desative o plano ou migre os clientes antes.',
     ],
 
     'delivery' => [

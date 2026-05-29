@@ -389,6 +389,7 @@ const formatRestaurantRating = (summary) => {
         <h2 class="text-base font-semibold text-slate-900">Editar restaurante — {{ editingTenant.name }}</h2>
         <TenantFormFields
             :form="editForm"
+            show-plan
             :languages="languages"
             :currencies="currencies"
             :timezones="timezones"

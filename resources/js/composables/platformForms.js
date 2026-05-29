@@ -43,9 +43,12 @@ export function emptyTenantForm(plans = [], languages = []) {
     };
 }
 
-/** Formulário de edição — sem plan_id (evita validação exists no PUT). */
+/** Formulário de edição — inclui plan_id da assinatura ativa. */
 export function emptyTenantEditForm() {
-    return tenantFormBase();
+    return {
+        ...tenantFormBase(),
+        plan_id: '',
+    };
 }
 
 function featureEnabledFromSettings(settings, key) {
@@ -82,6 +85,7 @@ export function tenantFormFromModel(t) {
         motoboys_enabled: featureEnabledFromSettings(t.settings_json, 'motoboys_enabled'),
         pos_enabled: featureEnabledFromSettings(t.settings_json, 'pos_enabled'),
         kds_enabled: featureEnabledFromSettings(t.settings_json, 'kds_enabled'),
+        plan_id: t.plan_id ?? t.active_subscription?.plan_id ?? '',
     };
 }
 

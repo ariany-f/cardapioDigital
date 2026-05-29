@@ -61,6 +61,8 @@ trait ValidatesPlatformTenant
 
         if ($creating) {
             $rules['plan_id'] = ['required', 'exists:plans,id'];
+        } else {
+            $rules['plan_id'] = ['sometimes', 'nullable', 'exists:plans,id'];
         }
 
         return $rules;

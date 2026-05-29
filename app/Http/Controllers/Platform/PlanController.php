@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -49,6 +50,21 @@ class PlanController extends Controller
         ]);
 
         return back()->with('success', 'Plano atualizado.');
+    }
+
+    public function destroy(Plan $plan): RedirectResponse
+    {
+        if ($plan->subscriptions()->exists()) {
+            throw ValidationException::withMessages([
+                'plan' => __('platform.plans.delete_has_subscriptions'),
+            ]);
+        }
+
+        $name = $plan->name;
+        $plan->delete();
+
+        return redirect()->route('platform.plans.index')
+            ->with('success', "Plano \"{$name}\" excluído.");
     }
 
     /** @return array<string, mixed> */

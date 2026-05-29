@@ -2,14 +2,16 @@
 import PlanFeatureFields from '@/Components/Platform/PlanFeatureFields.vue';
 import PlatformLayout from '@/Layouts/PlatformLayout.vue';
 import { defaultPlanFeatures, usePlanFeatures } from '@/composables/usePlanFeatures';
-import { Head, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 
 defineOptions({ layout: PlatformLayout });
 
 defineProps({ plans: Array });
 
 const { t, listFeatures } = usePlanFeatures();
+const page = usePage();
+const planError = computed(() => page.props.errors?.plan);
 const creating = ref(false);
 const editingId = ref(null);
 
@@ -73,6 +75,13 @@ const submitEdit = (plan) =>
 
 const formatPrice = (value) =>
     parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+const confirmDelete = (plan) => {
+    if (!confirm(t('delete_confirm', 'Excluir este plano?').replace(':name', plan.name))) {
+        return;
+    }
+    router.delete(route('platform.plans.destroy', plan.id));
+};
 </script>
 
 <template>
@@ -92,6 +101,10 @@ const formatPrice = (value) =>
             {{ t('create') }}
         </button>
     </div>
+
+    <p v-if="planError" class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        {{ planError }}
+    </p>
 
     <form v-if="creating" class="platform-card mt-6 max-w-lg space-y-4" @submit.prevent="submitCreate">
         <h2 class="text-base font-semibold text-slate-900">{{ t('create_title') }}</h2>
@@ -150,14 +163,18 @@ const formatPrice = (value) =>
                 </li>
             </ul>
 
-            <button
-                v-if="editingId !== plan.id"
-                type="button"
-                class="platform-btn-secondary mt-4 text-sm"
-                @click="startEdit(plan)"
-            >
-                {{ t('edit') }}
-            </button>
+            <div v-if="editingId !== plan.id" class="mt-4 flex flex-wrap gap-2">
+                <button type="button" class="platform-btn-secondary text-sm" @click="startEdit(plan)">
+                    {{ t('edit') }}
+                </button>
+                <button
+                    type="button"
+                    class="rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50"
+                    @click="confirmDelete(plan)"
+                >
+                    {{ t('delete', 'Excluir') }}
+                </button>
+            </div>
 
             <form v-else class="mt-4 space-y-3 border-t border-slate-100 pt-4" @submit.prevent="submitEdit(plan)">
                 <div>

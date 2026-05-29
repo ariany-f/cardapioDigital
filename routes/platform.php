@@ -54,6 +54,7 @@ Route::prefix('platform')->name('platform.')->group(function () {
         Route::get('plans', [PlanController::class, 'index'])->name('plans.index');
         Route::post('plans', [PlanController::class, 'store'])->name('plans.store');
         Route::put('plans/{plan}', [PlanController::class, 'update'])->name('plans.update');
+        Route::delete('plans/{plan}', [PlanController::class, 'destroy'])->name('plans.destroy');
 
         Route::get('settings/email', [PlatformMailSettingsController::class, 'edit'])->name('settings.email');
         Route::put('settings/email', [PlatformMailSettingsController::class, 'update'])->name('settings.email.update');

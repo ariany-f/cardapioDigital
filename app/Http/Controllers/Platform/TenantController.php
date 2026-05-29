@@ -105,6 +105,7 @@ class TenantController extends Controller
 
         return Inertia::render('Platform/Tenants/Index', $this->tenantIndexProps([
             'editingTenant' => $this->tenantForForm($tenant),
+            'plans' => $this->availablePlans($tenant),
         ]));
     }
 
@@ -116,13 +117,26 @@ class TenantController extends Controller
             $this->tenantValidationAttributes(),
         );
 
+        $planId = ! empty($data['plan_id']) ? (int) $data['plan_id'] : null;
+        $plan = $planId
+            ? Plan::query()->findOrFail($planId)
+            : $tenant->activeSubscription()->with('plan')->first()?->plan;
+
+        if ($plan) {
+            $this->validatePlanModuleFlags($plan, $data);
+        }
+
         $tenant->update([
             ...$this->tenantAttributes($data),
             'slug' => $data['slug'] ?? $tenant->slug,
             'document_type' => $data['document_type'] ?? $tenant->document_type,
         ]);
 
-        $this->applyTenantFeatureFlags($tenant, $data);
+        if ($planId) {
+            $this->syncTenantPlan($tenant, $planId);
+        }
+
+        $this->applyTenantFeatureFlags($tenant, $data, $planId);
 
         return redirect()->route('platform.tenants.edit', $tenant)
             ->with('success', 'Restaurante atualizado.');
@@ -162,6 +176,28 @@ class TenantController extends Controller
 
         return redirect()->route('platform.tenants.index')
             ->with('success', "Restaurante \"{$name}\" excluído permanentemente.");
+    }
+
+    protected function syncTenantPlan(Tenant $tenant, int $planId): void
+    {
+        $subscription = $tenant->activeSubscription;
+
+        if ($subscription) {
+            if ((int) $subscription->plan_id !== $planId) {
+                $subscription->update(['plan_id' => $planId]);
+            }
+
+            return;
+        }
+
+        TenantSubscription::create([
+            'tenant_id' => $tenant->id,
+            'plan_id' => $planId,
+            'current_period_start' => now()->startOfMonth(),
+            'current_period_end' => now()->endOfMonth(),
+            'payment_status' => 'pending',
+            'status' => 'active',
+        ]);
     }
 
     /**
@@ -236,6 +272,7 @@ class TenantController extends Controller
     {
         $tenant->loadMissing('activeSubscription.plan');
         $data = $tenant->toArray();
+        $data['plan_id'] = $tenant->activeSubscription?->plan_id;
         $data['motoboys_disable_blocked'] = TenantFeatures::hasMotoboyDeliveriesInProgress($tenant);
         $data['motoboy_deliveries_in_progress_count'] = TenantFeatures::motoboyDeliveriesInProgressCount($tenant);
         $data['plan_motoboys_included'] = TenantFeatures::motoboysAllowedByPlan($tenant);
@@ -249,7 +286,7 @@ class TenantController extends Controller
     {
         return array_merge([
             'tenants' => $this->tenantsPaginator(),
-            'plans' => Plan::where('is_active', true)->get(['id', 'name', 'slug', 'price_monthly', 'features_json']),
+            'plans' => $this->availablePlans(),
             'languages' => Language::query()
                 ->where('is_active', true)
                 ->orderBy('name')
@@ -279,6 +316,27 @@ class TenantController extends Controller
         );
 
         return $paginator;
+    }
+
+    protected function availablePlans(?Tenant $tenant = null): \Illuminate\Support\Collection
+    {
+        $plans = Plan::query()
+            ->where('is_active', true)
+            ->orderBy('price_monthly')
+            ->get(['id', 'name', 'slug', 'price_monthly', 'features_json']);
+
+        $currentPlanId = $tenant?->activeSubscription?->plan_id;
+
+        if ($currentPlanId && ! $plans->contains('id', $currentPlanId)) {
+            $current = Plan::query()->find($currentPlanId, ['id', 'name', 'slug', 'price_monthly', 'features_json']);
+
+            if ($current) {
+                $plans->push($current);
+                $plans = $plans->sortBy('price_monthly')->values();
+            }
+        }
+
+        return $plans;
     }
 
     /**
