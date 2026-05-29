@@ -10,7 +10,6 @@ use App\Models\Order;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\TenantFeatures;
-use Database\Seeders\PlatformSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -27,12 +26,14 @@ class OrderShowDeliveryHistoryTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(PlatformSeeder::class);
 
-        $this->tenant = Tenant::where('slug', 'acme')->firstOrFail();
-        $this->branch = Branch::withoutGlobalScopes()
-            ->where('tenant_id', $this->tenant->id)
-            ->firstOrFail();
+        $this->tenant = Tenant::create(['name' => 'Loja', 'slug' => 'loja', 'status' => 'active']);
+        $this->branch = Branch::withoutGlobalScopes()->create([
+            'tenant_id' => $this->tenant->id,
+            'name' => 'Centro',
+            'slug' => 'centro',
+            'is_active' => true,
+        ]);
 
         $this->admin = User::factory()->create(['tenant_id' => $this->tenant->id]);
         $this->admin->givePermissionTo('orders.view');
@@ -56,7 +57,7 @@ class OrderShowDeliveryHistoryTest extends TestCase
         $order = Order::withoutGlobalScopes()->create([
             'tenant_id' => $this->tenant->id,
             'branch_id' => $this->branch->id,
-            'order_number' => 'ACME-HIST-1',
+            'order_number' => 'LOJA-HIST-1',
             'type' => 'delivery',
             'status' => 'delivered',
             'subtotal' => 40,

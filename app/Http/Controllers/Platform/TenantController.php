@@ -48,6 +48,9 @@ class TenantController extends Controller
             $this->tenantValidationAttributes(),
         );
 
+        $plan = Plan::query()->findOrFail($data['plan_id']);
+        $this->validatePlanModuleFlags($plan, $data);
+
         $slug = $data['slug'] ?? Str::slug($data['name']);
         $baseSlug = $slug;
         $i = 1;
@@ -163,6 +166,30 @@ class TenantController extends Controller
         $this->applyTenantFeatureFlag($tenant, $data, $plan, 'motoboys', 'motoboys_enabled', 'platform.delivery.motoboys_plan_blocked', fn (Tenant $t, bool $enabled) => TenantFeatures::setMotoboysEnabled($t, $enabled));
         $this->applyTenantFeatureFlag($tenant, $data, $plan, 'pos', 'pos_enabled', 'platform.plans.pos_plan_blocked', fn (Tenant $t, bool $enabled) => TenantFeatures::setPosEnabled($t, $enabled));
         $this->applyTenantFeatureFlag($tenant, $data, $plan, 'kds', 'kds_enabled', 'platform.plans.kds_plan_blocked', fn (Tenant $t, bool $enabled) => TenantFeatures::setKdsEnabled($t, $enabled));
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    protected function validatePlanModuleFlags(Plan $plan, array $data): void
+    {
+        foreach ([
+            ['motoboys', 'motoboys_enabled', 'platform.delivery.motoboys_plan_blocked'],
+            ['pos', 'pos_enabled', 'platform.plans.pos_plan_blocked'],
+            ['kds', 'kds_enabled', 'platform.plans.kds_plan_blocked'],
+        ] as [$planFeature, $inputKey, $messageKey]) {
+            if (! array_key_exists($inputKey, $data)) {
+                continue;
+            }
+
+            $enabled = filter_var($data[$inputKey], FILTER_VALIDATE_BOOLEAN);
+
+            if ($enabled && ! TenantPlanFeatures::planAllows($plan, $planFeature)) {
+                throw ValidationException::withMessages([
+                    $inputKey => [__($messageKey)],
+                ]);
+            }
+        }
     }
 
     /**
