@@ -400,6 +400,15 @@ const chatEnabled = computed(() => props.chatAvailable);
                         </span>
                     </div>
                     <p v-if="branch.full_address" class="mt-3 text-xs text-white/70 lg:text-sm">{{ branch.full_address }}</p>
+                    <button
+                        v-if="showMapButton"
+                        type="button"
+                        class="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-white/25"
+                        @click="mapOpen = true"
+                    >
+                        <NavIcon name="map-pin" size="sm" />
+                        Ver no mapa
+                    </button>
                     <a
                         v-if="branch.instagram?.url"
                         :href="branch.instagram.url"
@@ -722,6 +731,14 @@ const chatEnabled = computed(() => props.chatAvailable);
         :theme-color="page.props.tenant?.theme_primary_color"
         @close="modalOpen = false"
         @confirm="onModalConfirm"
+    />
+
+    <BranchMapModal
+        v-if="googleMaps?.api_key"
+        :open="mapOpen"
+        :branch="branch"
+        :api-key="googleMaps.api_key"
+        @close="mapOpen = false"
     />
 
     <ChatWidget

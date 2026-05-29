@@ -18,7 +18,7 @@ const nav = [
     { label: 'Avaliações', route: 'platform.ratings.index', icon: 'chart' },
     { label: 'E-mail (SMTP)', route: 'platform.settings.email', icon: 'message' },
     { label: 'SEO', route: 'platform.settings.seo', icon: 'globe' },
-    { label: 'Google Maps', route: 'platform.settings.maps', icon: 'map' },
+    { label: 'Google Maps', route: 'platform.settings.maps', icon: 'map-pin' },
 ].map((item) => ({
     ...item,
     href: route(item.route),
