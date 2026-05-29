@@ -23,6 +23,10 @@ const props = defineProps({
 const page = usePage();
 const order = ref({ ...props.order });
 
+const showPixPayment = computed(
+    () => order.value.pix_payment && order.value.payment_status !== 'paid',
+);
+
 const deliveryAddressDisplay = computed(() => {
     const current = order.value;
     if (current?.type !== 'delivery') {
@@ -142,6 +146,9 @@ const pollStatus = async () => {
             status_histories: data.status_histories,
             show_delivery_code: data.show_delivery_code,
             delivery_confirmation_code: data.delivery_confirmation_code,
+            payment_status: data.payment_status,
+            payment_status_label: data.payment_status_label,
+            pix_payment: data.pix_payment,
         };
     } catch {
         /* ignore network errors during poll */
@@ -222,7 +229,7 @@ onUnmounted(() => clearInterval(pollTimer));
     </div>
 
     <div
-        v-if="order.pix_payment"
+        v-if="showPixPayment"
         class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"
     >
         <p class="font-semibold">{{ t('payment.pix_online') }}</p>

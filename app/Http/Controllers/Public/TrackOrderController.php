@@ -305,17 +305,18 @@ class TrackOrderController extends Controller
             return null;
         }
 
-        $pending = $order->payments->firstWhere('status', 'pending')
-            ?? $order->payments->firstWhere('gateway', 'pix_static');
+        $pending = $order->payments->first(
+            fn ($payment) => $payment->status === 'pending' && filled($payment->copy_paste),
+        );
 
-        if (! $pending?->copy_paste && $order->payment_channel !== 'pix') {
+        if (! $pending) {
             return null;
         }
 
         return [
             'amount' => $order->total,
-            'copy_paste' => $pending?->copy_paste,
-            'beneficiary' => $pending?->metadata_json['beneficiary'] ?? null,
+            'copy_paste' => $pending->copy_paste,
+            'beneficiary' => $pending->metadata_json['beneficiary'] ?? null,
             'instructions' => __('payment.pix_instructions'),
         ];
     }

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Branch;
 use App\Models\Order;
+use App\Models\OrderPayment;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\DeliveryConfirmationService;
@@ -131,6 +132,84 @@ class DeliveryConfirmationTest extends TestCase
             '/^\d{6}$/',
             $order->fresh()->delivery_confirmation_code,
         );
+    }
+
+    public function test_track_page_hides_pix_when_payment_is_confirmed(): void
+    {
+        $order = $this->deliveryOrder('confirmed');
+        $order->update([
+            'payment_method' => 'online',
+            'payment_channel' => 'pix',
+            'payment_status' => 'paid',
+            'total' => 66.70,
+        ]);
+
+        OrderPayment::create([
+            'order_id' => $order->id,
+            'gateway' => 'pix_static',
+            'amount' => 66.70,
+            'status' => 'paid',
+            'copy_paste' => '00020126580014BR.GOV.BCB.PIX',
+            'paid_at' => now(),
+        ]);
+
+        $this->get("/{$this->tenant->slug}/pedido/{$order->order_number}")
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Public/TrackOrder')
+                ->where('order.payment_status', 'paid')
+                ->where('order.pix_payment', null));
+    }
+
+    public function test_track_page_shows_pix_while_payment_is_pending(): void
+    {
+        $order = $this->deliveryOrder('confirmed');
+        $order->update([
+            'payment_method' => 'online',
+            'payment_channel' => 'pix',
+            'payment_status' => 'pending',
+            'total' => 66.70,
+        ]);
+
+        OrderPayment::create([
+            'order_id' => $order->id,
+            'gateway' => 'pix_static',
+            'amount' => 66.70,
+            'status' => 'pending',
+            'copy_paste' => '00020126580014BR.GOV.BCB.PIX',
+        ]);
+
+        $this->get("/{$this->tenant->slug}/pedido/{$order->order_number}")
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Public/TrackOrder')
+                ->where('order.payment_status', 'pending')
+                ->where('order.pix_payment.copy_paste', '00020126580014BR.GOV.BCB.PIX'));
+    }
+
+    public function test_track_status_json_hides_pix_after_payment_confirmed(): void
+    {
+        $order = $this->deliveryOrder('confirmed');
+        $order->update([
+            'payment_method' => 'online',
+            'payment_channel' => 'pix',
+            'payment_status' => 'paid',
+            'total' => 66.70,
+        ]);
+
+        OrderPayment::create([
+            'order_id' => $order->id,
+            'gateway' => 'pix_static',
+            'amount' => 66.70,
+            'status' => 'paid',
+            'copy_paste' => '00020126580014BR.GOV.BCB.PIX',
+            'paid_at' => now(),
+        ]);
+
+        $this->getJson("/{$this->tenant->slug}/pedido/{$order->order_number}/status")
+            ->assertOk()
+            ->assertJsonPath('payment_status', 'paid')
+            ->assertJsonPath('pix_payment', null);
     }
 
     public function test_track_page_shows_delivery_details(): void
