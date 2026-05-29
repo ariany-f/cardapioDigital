@@ -19,6 +19,7 @@ Stack: **Laravel 12**, **Vue 3**, **Inertia.js**, **Tailwind**, **MySQL**, multi
 9. [Testes](#9-testes)
 10. [Traduções e textos](#10-traduções-e-textos)
 11. [Tarefas comuns — atalhos](#11-tarefas-comuns--atalhos)
+12. [Deploy em produção (Hostinger)](#12-deploy-em-produção-hostinger)
 
 ---
 
@@ -514,6 +515,7 @@ Idiomas do tenant: model `Language` + `Admin/LanguageController` (export/import 
 | Prop global no Vue | `HandleInertiaRequests::share()` |
 | Novo módulo on/off | `TenantFeatures`, middleware `Ensure*Enabled`, checkbox platform, menu `requires*` em `AdminLayout` |
 | Integração externa entrega | `Api/DeliveryWebhookController`, tokens em `Admin/WebhookTokenController` |
+| Fazer deploy em produção | [Seção 12 — Deploy Hostinger](#12-deploy-em-produção-hostinger) |
 
 ---
 
@@ -530,6 +532,174 @@ npm run build
 ```
 
 Credenciais e URLs demo: ver [README.md](../README.md).
+
+---
+
+## 12. Deploy em produção (Hostinger)
+
+Produção atual: **Hostinger cloud compartilhada**, subdomínio **`appcardapio.thunderbold.com.br`**, **sem Git no servidor** (FTP + SSH).
+
+### 12.1. Estrutura no servidor
+
+```
+~/domains/thunderbold.com.br/
+├── public_html/                          # domínio principal (thunderbold.com.br)
+│   └── appcardapiolaravel/               # Laravel (composer.json, artisan, .env)
+│       ├── app/
+│       ├── resources/
+│       ├── storage/
+│       ├── vendor/                       # gerado pelo composer no servidor
+│       └── public/
+│           └── build/                    # Laravel lê manifest.json daqui
+│
+└── appcardapio/                          # raiz web do subdomínio
+    ├── index.php                         # aponta para ../public_html/appcardapiolaravel/
+    ├── .htaccess
+    ├── build/                            # browser carrega CSS/JS daqui
+    └── storage → symlink para uploads
+```
+
+O `index.php` do subdomínio referencia o Laravel em `../public_html/appcardapiolaravel/` (vendor, bootstrap, storage).
+
+**Symlink de uploads** (rodar uma vez, ou se der erro de permissão):
+
+```bash
+cd ~/domains/thunderbold.com.br/appcardapio
+rm -rf storage
+ln -s ../public_html/appcardapiolaravel/storage/app/public storage
+```
+
+### 12.2. O que NÃO enviar
+
+| Pasta/arquivo | Motivo |
+|---------------|--------|
+| `node_modules/` | Só no PC; servidor não tem Node |
+| `vendor/` | Gerado com `composer install` no SSH |
+| `.git/` | Desnecessário em produção |
+| `.env` | Criar/editar só no servidor |
+
+O `public/build/` está no `.gitignore` — o build é enviado manualmente após `npm run build` no PC.
+
+### 12.3. Deploy a cada atualização
+
+Fluxo fixo (sem Git no servidor):
+
+```
+1. PC        → npm run build
+2. FTP       → subir o projeto (exceto o que está na lista abaixo)
+3. FTP       → subir public/build/ nos dois destinos
+4. SSH       → composer install + migrate + clear cache
+```
+
+#### 1. No PC — build
+
+```powershell
+cd c:\Dev\appcardapio
+npm run build
+```
+
+Rode **sempre** antes do deploy (mesmo que só tenha mudado PHP — não custa nada e evita esquecer).
+
+Opcional no PC: `git commit` + `git push` (backup no GitHub; o servidor não usa Git).
+
+#### 2. FTP — subir o projeto
+
+Enviar para `public_html/appcardapiolaravel/` tudo que mudou (ou o projeto inteiro):
+
+- `app/`, `bootstrap/`, `config/`, `database/`, `resources/`, `routes/`, `lang/`
+- `artisan`, `composer.json`, `composer.lock`
+- **Não enviar:** `node_modules/`, `vendor/`, `.git/`, `.env`, `public/build/` (vai no passo 3)
+
+#### 3. FTP — subir os builds
+
+Conteúdo de `public/build/` (do PC) → **os dois** destinos no servidor:
+
+| Origem (PC) | Destino (servidor) |
+|-------------|-------------------|
+| `public/build/*` | `appcardapio/build/` |
+| `public/build/*` | `public_html/appcardapiolaravel/public/build/` |
+
+#### 4. SSH — comandos no servidor
+
+```bash
+cd ~/domains/thunderbold.com.br/public_html/appcardapiolaravel
+
+composer install --no-dev --optimize-autoloader
+
+php artisan migrate --force
+
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+php artisan cache:clear
+```
+
+Se `composer` não estiver no PATH:
+
+```bash
+php composer.phar install --no-dev --optimize-autoloader
+```
+
+Se o PHP padrão for antigo:
+
+```bash
+/opt/alt/php83/usr/bin/php artisan migrate --force
+```
+
+#### Cache de produção (opcional)
+
+Só depois de testar no browser:
+
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+Se mudar o `.env`, limpar antes: `php artisan config:clear` → `php artisan config:cache`.
+
+### 12.4. `.env` de produção (referência)
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://appcardapio.thunderbold.com.br
+
+SESSION_DRIVER=database
+SESSION_DOMAIN=
+SESSION_SECURE_COOKIE=true
+QUEUE_CONNECTION=sync
+```
+
+- `SESSION_DOMAIN` deve ficar **vazio** no subdomínio.
+- `APP_URL` com `https://` e o domínio exato.
+
+### 12.5. Checklist pós-deploy
+
+```
+[ ] https://appcardapio.thunderbold.com.br/up responde ok
+[ ] Login /platform funciona
+[ ] POST de formulários não retorna 419 (sessão/CSRF)
+[ ] manifest.json nos dois build/ (appcardapio e appcardapiolaravel/public)
+[ ] php artisan migrate --force (se houve migration)
+[ ] Permissões: chmod -R 775 storage bootstrap/cache (se erro 500)
+```
+
+### 12.6. Problemas comuns
+
+| Sintoma | Causa | Solução |
+|---------|--------|---------|
+| `Vite manifest not found` | `build/` no lugar errado | Copiar para `appcardapiolaravel/public/build/` e `appcardapio/build/` |
+| `View [app] not found` | Falta `resources/views/` | Enviar pasta `resources/` |
+| 419 no POST | Sessão/CSRF | `SESSION_DOMAIN` vazio, `config:clear`, desativar cache CDN no hPanel |
+| `composer.json not found` | Pasta errada | Rodar composer dentro de `appcardapiolaravel/` |
+| Slug `/acme` 404 | Demo não seedado | `php artisan db:seed --class=DemoSeeder --force` |
+
+### 12.7. Resumo
+
+```
+npm run build  →  FTP (projeto)  →  FTP (build × 2)  →  SSH (composer + artisan)
+```
 
 ---
 
