@@ -29,7 +29,7 @@ const logout = () => router.post(route('logout'));
 </script>
 
 <template>
-    <div class="platform-shell min-h-screen lg:flex">
+    <div class="platform-shell min-h-screen lg:flex lg:h-screen lg:overflow-hidden">
         <div
             v-if="sidebarOpen"
             class="fixed inset-0 z-40 bg-black/40 lg:hidden"
@@ -37,7 +37,7 @@ const logout = () => router.post(route('logout'));
         />
 
         <aside
-            class="platform-sidebar fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r transition-transform lg:static lg:translate-x-0"
+            class="platform-sidebar fixed inset-y-0 left-0 z-50 flex h-screen max-h-screen w-64 flex-col overflow-hidden border-r transition-transform lg:static lg:shrink-0 lg:translate-x-0"
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
         >
             <div class="platform-top-strip shrink-0" aria-hidden="true" />
@@ -76,8 +76,10 @@ const logout = () => router.post(route('logout'));
             </div>
         </aside>
 
-        <div class="flex min-h-screen min-w-0 flex-1 flex-col bg-[var(--platform-bg)]">
-            <header class="platform-header sticky top-0 z-30 flex items-center justify-between px-4 py-3 backdrop-blur lg:border-b-2 lg:border-indigo-200 lg:px-8">
+        <div class="flex min-h-screen min-w-0 flex-1 flex-col bg-[var(--platform-bg)] lg:min-h-0 lg:overflow-hidden">
+            <header
+                class="platform-header z-30 flex shrink-0 items-center justify-between px-4 py-3 lg:border-b-2 lg:border-indigo-200 lg:px-8"
+            >
                 <button
                     type="button"
                     class="rounded-xl p-2 text-gray-600 hover:bg-gray-100 lg:hidden"

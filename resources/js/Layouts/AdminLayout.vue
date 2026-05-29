@@ -97,7 +97,7 @@ const logout = () => router.post(route('logout'));
 
 <template>
     <div
-        class="admin-shell min-h-screen lg:flex"
+        class="admin-shell min-h-screen lg:flex lg:h-screen lg:overflow-hidden"
         :style="{ '--admin-accent': tenant?.theme_primary_color || '#f4003a' }"
     >
         <div
@@ -107,7 +107,7 @@ const logout = () => router.post(route('logout'));
         />
 
         <aside
-            class="admin-sidebar fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-gray-200 transition-transform lg:static lg:translate-x-0"
+            class="admin-sidebar fixed inset-y-0 left-0 z-50 flex h-screen max-h-screen w-64 flex-col overflow-hidden border-r border-gray-200 transition-transform lg:static lg:shrink-0 lg:translate-x-0"
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
         >
             <div class="admin-top-strip shrink-0" aria-hidden="true" />
@@ -212,7 +212,7 @@ const logout = () => router.post(route('logout'));
                 </div>
             </header>
 
-            <main class="flex-1 px-4 py-6 lg:px-8 lg:py-8">
+            <main class="min-h-0 flex-1 overflow-y-auto px-4 py-6 lg:px-8 lg:py-8">
                 <div
                     v-if="isPlatformUser"
                     class="mb-6 rounded-2xl border border-brand/20 bg-brand-soft px-4 py-3 text-sm text-gray-800"
