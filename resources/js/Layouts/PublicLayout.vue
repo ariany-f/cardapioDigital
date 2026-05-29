@@ -65,7 +65,7 @@ const accountHref = computed(() =>
                         </option>
                     </select>
                     <Link
-                        v-if="tenant?.guest_checkout_enabled"
+                        v-if="tenant?.guest_checkout_enabled && !customer"
                         :href="route('tenant.track.lookup', { tenant: tenant.slug })"
                         class="rounded-full px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
                     >

@@ -46,7 +46,7 @@ const brandColor = computed(() => tenant.value?.theme_primary_color || '#f4003a'
                 </Link>
                 <nav class="flex shrink-0 items-center gap-1 text-sm">
                     <Link
-                        v-if="tenant?.guest_checkout_enabled"
+                        v-if="tenant?.guest_checkout_enabled && !customer"
                         :href="route('tenant.track.lookup', { tenant: tenant.slug })"
                         class="rounded-full px-3 py-2 font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
                     >
