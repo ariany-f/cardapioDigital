@@ -94,18 +94,7 @@ class HandleInertiaRequests extends Middleware
             'communication_disclaimer' => PlatformCommunicationDisclaimer::forInertia($tenant?->name),
             'googleMaps' => PlatformGoogleMaps::forFrontend(),
             'platformTranslations' => [
-                'plans' => [
-                    'page_title' => __('platform.plans.page_title'),
-                    'intro' => __('platform.plans.intro'),
-                    'slug' => __('platform.plans.slug'),
-                    'per_month' => __('platform.plans.per_month'),
-                    'edit' => __('platform.plans.edit'),
-                    'save' => __('platform.plans.save'),
-                    'active' => __('platform.plans.active'),
-                    'yes' => __('platform.plans.yes'),
-                    'no' => __('platform.plans.no'),
-                    'features' => __('platform.plans.features'),
-                ],
+                'plans' => __('platform.plans'),
             ],
         ];
     }

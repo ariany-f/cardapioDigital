@@ -30,6 +30,19 @@ class PlatformPlanTest extends TestCase
         $this->admin->assignRole('superadmin');
     }
 
+    public function test_plans_page_includes_create_form_translations(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('platform.plans.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('platformTranslations.plans.create_title')
+                ->has('platformTranslations.plans.limits_title')
+                ->has('platformTranslations.plans.slug_help')
+                ->where('platformTranslations.plans.create_submit', 'Salvar plano')
+                ->where('platformTranslations.plans.features.max_branches', 'Filiais máximas'));
+    }
+
     public function test_platform_user_can_create_plan_with_features(): void
     {
         $this->actingAs($this->admin)

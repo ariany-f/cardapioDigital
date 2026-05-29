@@ -104,7 +104,7 @@ const formatPrice = (value) =>
 
         <div>
             <label class="mb-1 block text-sm font-medium text-slate-700">{{ t('slug_field') }}</label>
-            <input v-model="createForm.slug" type="text" class="platform-input" placeholder="ex.: starter" />
+            <input v-model="createForm.slug" type="text" class="platform-input" :placeholder="t('slug_placeholder')" />
             <p class="mt-1 text-xs text-slate-500">{{ t('slug_help') }}</p>
             <p v-if="createForm.errors.slug" class="mt-1 text-sm text-red-600">{{ createForm.errors.slug }}</p>
         </div>
@@ -127,7 +127,7 @@ const formatPrice = (value) =>
                 {{ t('cancel') }}
             </button>
             <button type="submit" class="platform-btn-primary" :disabled="createForm.processing">
-                {{ createForm.processing ? 'Salvando...' : t('create_submit') }}
+                {{ createForm.processing ? t('saving') : t('create_submit') }}
             </button>
         </div>
     </form>
@@ -140,7 +140,7 @@ const formatPrice = (value) =>
                 {{ formatPrice(plan.price_monthly) }}<span class="text-base font-normal text-stone-500">{{ t('per_month') }}</span>
             </p>
             <p class="mt-1 text-xs" :class="plan.is_active ? 'text-green-700' : 'text-slate-400'">
-                {{ plan.is_active ? t('active') : 'Inativo' }}
+                {{ plan.is_active ? t('active') : t('inactive') }}
             </p>
 
             <ul class="mt-3 space-y-1.5 text-sm text-stone-700">
@@ -184,7 +184,7 @@ const formatPrice = (value) =>
                         {{ t('cancel') }}
                     </button>
                     <button type="submit" class="platform-btn-primary flex-1" :disabled="editForm.processing">
-                        {{ editForm.processing ? 'Salvando...' : t('save') }}
+                        {{ editForm.processing ? t('saving') : t('save') }}
                     </button>
                 </div>
             </form>
