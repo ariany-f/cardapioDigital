@@ -187,6 +187,62 @@ class DeliveryStatusService
         );
     }
 
+    /**
+     * Libera entregador quando o pedido é cancelado ou recusado.
+     */
+    public function releaseForTerminalOrder(Order $order, string $orderStatus): void
+    {
+        $delivery = Delivery::query()->where('order_id', $order->id)->first();
+
+        if (! $delivery) {
+            return;
+        }
+
+        $wasActive = in_array($delivery->status, Motoboy::ACTIVE_DELIVERY_STATUSES, true)
+            || $delivery->motoboy_assignment_status === 'pending';
+
+        if (! $wasActive) {
+            return;
+        }
+
+        $deliveryStatus = $orderStatus === 'rejected' ? 'failed' : 'cancelled';
+        $motoboyId = $delivery->motoboy_id;
+
+        $delivery->update([
+            'status' => $deliveryStatus,
+            'motoboy_assignment_status' => null,
+        ]);
+
+        $this->recordHistory(
+            $delivery,
+            $deliveryStatus,
+            auth()->guard('web')->id(),
+            'system',
+        );
+
+        if ($motoboyId) {
+            $this->syncMotoboyAvailabilityAfterRelease((int) $motoboyId);
+        }
+    }
+
+    protected function syncMotoboyAvailabilityAfterRelease(int $motoboyId): void
+    {
+        $motoboy = Motoboy::query()->find($motoboyId);
+
+        if (! $motoboy || $motoboy->operational_status !== 'busy') {
+            return;
+        }
+
+        $hasInProgress = Delivery::query()
+            ->where('motoboy_id', $motoboyId)
+            ->inProgressForMotoboy()
+            ->exists();
+
+        if (! $hasInProgress) {
+            $motoboy->update(['operational_status' => 'available']);
+        }
+    }
+
     protected function recordHistory(
         Delivery $delivery,
         string $status,

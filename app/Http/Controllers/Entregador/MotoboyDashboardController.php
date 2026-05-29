@@ -22,12 +22,13 @@ class MotoboyDashboardController extends Controller
 
         return Inertia::render('Entregador/Dashboard', [
             'pendingAssignments' => $this->deliveriesQuery($motoboy)
+                ->inProgressForMotoboy()
                 ->where('motoboy_assignment_status', 'pending')
                 ->get()
                 ->map(fn ($d) => $this->deliveryPayload($d)),
             'activeDeliveries' => $this->deliveriesQuery($motoboy)
+                ->inProgressForMotoboy()
                 ->where('motoboy_assignment_status', 'accepted')
-                ->whereIn('status', ['assigned', 'picked_up', 'on_route'])
                 ->get()
                 ->map(fn ($d) => $this->deliveryPayload($d)),
         ]);
@@ -38,6 +39,7 @@ class MotoboyDashboardController extends Controller
         $motoboy = Auth::guard('motoboy')->user();
 
         $pending = $this->deliveriesQuery($motoboy)
+            ->inProgressForMotoboy()
             ->where('motoboy_assignment_status', 'pending')
             ->count();
 

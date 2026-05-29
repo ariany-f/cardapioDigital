@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\BelongsToTenant;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +11,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Delivery extends Model
 {
     use BelongsToTenant;
+
+    /** @var list<string> */
+    public const TERMINAL_ORDER_STATUSES = ['delivered', 'cancelled', 'rejected'];
 
     protected $fillable = [
         'tenant_id', 'order_id', 'motoboy_id', 'motoboy_assignment_status',
@@ -39,5 +43,16 @@ class Delivery extends Model
     public function statusHistories(): HasMany
     {
         return $this->hasMany(DeliveryStatusHistory::class);
+    }
+
+    /**
+     * Entrega ainda ativa para o entregador (pedido não finalizado).
+     */
+    public function scopeInProgressForMotoboy(Builder $query): Builder
+    {
+        return $query->where(function (Builder $query) {
+            $query->whereIn('status', Motoboy::ACTIVE_DELIVERY_STATUSES)
+                ->orWhere('motoboy_assignment_status', 'pending');
+        })->whereHas('order', fn (Builder $query) => $query->whereNotIn('status', self::TERMINAL_ORDER_STATUSES));
     }
 }

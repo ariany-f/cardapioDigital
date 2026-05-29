@@ -98,9 +98,7 @@ class Motoboy extends Authenticatable
             return true;
         }
 
-        $active = $this->deliveries()
-            ->whereIn('status', self::ACTIVE_DELIVERY_STATUSES)
-            ->count();
+        $active = $this->deliveries()->inProgressForMotoboy()->count();
 
         return $active < $this->max_active_deliveries;
     }

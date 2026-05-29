@@ -35,6 +35,7 @@ class ReturnWorkflowService
         ]);
 
         $this->stock->restoreForCancelledOrder($order->fresh());
+        app(DeliveryStatusService::class)->releaseForTerminalOrder($order->fresh(), 'cancelled');
 
         if ($order->payment_status === 'paid') {
             $order->update(['payment_status' => 'refunded']);

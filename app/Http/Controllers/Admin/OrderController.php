@@ -88,10 +88,7 @@ class OrderController extends Controller
                     ->with('branches:id,name')
                     ->tap(fn ($q) => \App\Support\MotoboyBranchAccess::scopeForBranch($q, (int) $order->branch_id))
                     ->withCount([
-                        'deliveries as active_deliveries_count' => fn ($q) => $q->whereIn(
-                            'status',
-                            \App\Models\Motoboy::ACTIVE_DELIVERY_STATUSES
-                        ),
+                        'deliveries as active_deliveries_count' => fn ($q) => $q->inProgressForMotoboy(),
                     ])
                     ->orderBy('name')
                     ->get()

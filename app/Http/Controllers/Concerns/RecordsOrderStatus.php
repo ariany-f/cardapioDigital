@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\OrderStatusHistory;
 use App\Services\ActivityLogService;
 use App\Services\DeliveryConfirmationService;
+use App\Services\DeliveryStatusService;
 use App\Services\OrderNotificationService;
 use App\Services\StockService;
 
@@ -41,6 +42,7 @@ trait RecordsOrderStatus
 
         if (in_array($status, ['cancelled', 'rejected'], true)) {
             app(StockService::class)->restoreForCancelledOrder($order->fresh());
+            app(DeliveryStatusService::class)->releaseForTerminalOrder($order->fresh(), $status);
         }
 
         if ($status === 'out_for_delivery') {

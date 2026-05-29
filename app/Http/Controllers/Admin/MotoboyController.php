@@ -30,7 +30,7 @@ class MotoboyController extends Controller
         $query = Motoboy::query()
             ->with('branches:id,name')
             ->withCount([
-                'deliveries as active_deliveries_count' => fn ($q) => $q->whereIn('status', Motoboy::ACTIVE_DELIVERY_STATUSES),
+                'deliveries as active_deliveries_count' => fn ($q) => $q->inProgressForMotoboy(),
                 'deliveries as total_deliveries_count',
                 'reports as open_reports_count' => fn ($q) => $q->where('status', 'open'),
                 'reports as total_reports_count',
@@ -189,7 +189,7 @@ class MotoboyController extends Controller
 
     public function destroy(string $tenant, Motoboy $motoboy): RedirectResponse
     {
-        if ($motoboy->deliveries()->whereIn('status', Motoboy::ACTIVE_DELIVERY_STATUSES)->exists()) {
+        if ($motoboy->deliveries()->inProgressForMotoboy()->exists()) {
             return back()->with('error', 'Não é possível remover: há entregas em andamento.');
         }
 

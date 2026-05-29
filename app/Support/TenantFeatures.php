@@ -59,11 +59,7 @@ class TenantFeatures
         return Delivery::query()
             ->where('tenant_id', $tenant->id)
             ->whereNotNull('motoboy_id')
-            ->where(function ($query) {
-                $query->whereIn('status', Motoboy::ACTIVE_DELIVERY_STATUSES)
-                    ->orWhere('motoboy_assignment_status', 'pending');
-            })
-            ->whereHas('order', fn ($query) => $query->whereNotIn('status', ['delivered', 'cancelled', 'rejected']));
+            ->inProgressForMotoboy();
     }
 
     public static function posAllowedByPlan(?Tenant $tenant): bool
