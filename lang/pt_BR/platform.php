@@ -1,0 +1,34 @@
+<?php
+
+return [
+    'communication' => [
+        'customer_title' => 'Papel do App Cardápio',
+        'customer_body' => 'Somos uma plataforma de cardápio digital: facilitamos a comunicação entre você e o restaurante (pedidos, status, chat e mensagens de ajuda). Dúvidas, reclamações, entregas, pagamentos e reembolsos são tratados diretamente com o restaurante — o suporte sobre o pedido não é responsabilidade do App Cardápio.',
+        'customer_alerts' => 'Enviamos avisos automáticos (por exemplo, e-mail) quando o restaurante atualiza manualmente o status do seu pedido. Esses alertas são apenas informativos e não significam que estamos intermediando ou garantindo a entrega.',
+        'customer_support_hint' => 'O formulário abaixo encaminha sua mensagem ao restaurante. Ele deve responder pelos canais de contato dele (telefone, WhatsApp, etc.).',
+
+        'restaurant_title' => 'Papel da plataforma nos pedidos',
+        'restaurant_body' => 'O App Cardápio fornece o cardápio digital, registro de pedidos, chat e encaminhamento de solicitações dos clientes. A operação do pedido (preparo, entrega, pagamento, reembolso e atendimento) é de responsabilidade do seu estabelecimento — a plataforma não presta suporte ao cliente final sobre pedidos.',
+        'restaurant_alerts' => 'Quando você altera o status de um pedido no painel, o cliente pode receber um aviso automático (e-mail), se tiver informado o endereço. Trata-se apenas de comunicação do que foi registrado por você; a plataforma não valida nem garante a execução do serviço.',
+
+        'footer_customer_hint' => 'Dúvidas sobre o pedido? Fale com o restaurante. Avisos por e-mail são automáticos e informativos.',
+        'footer_short' => 'Plataforma de comunicação entre cliente e restaurante. Suporte sobre pedidos: responsabilidade do estabelecimento.',
+        'footer_admin' => 'Cardápio digital e registro de pedidos. A operação e o atendimento ao cliente são do seu estabelecimento.',
+        'footer_platform' => 'Painel de gestão da plataforma App Cardápio. Pedidos, entregas e atendimento ao cliente final são de responsabilidade de cada restaurante cadastrado — a plataforma não opera como loja nem presta suporte ao consumidor sobre pedidos.',
+
+        'email_status_intro' => 'O restaurante :restaurant atualizou o status do seu pedido. Este e-mail é apenas um aviso automático da plataforma.',
+        'email_footer' => 'App Cardápio — ferramenta de cardápio e comunicação. Questões sobre o pedido devem ser resolvidas diretamente com o restaurante.',
+    ],
+
+    'delivery' => [
+        'onboarding_title' => 'Entrega própria — sem frota da plataforma',
+        'onboarding_body' => 'O App Cardápio não possui entregadores nem realiza entregas. Quem vende pelo cardápio precisa organizar a logística (equipe própria, motoboy contratado, retirada no balcão, etc.). O sistema apenas registra pedidos e, quando disponível, ajuda o restaurante a atribuir entregadores que ele mesmo cadastrou.',
+        'onboarding_plan_note' => 'O cadastro de entregadores no painel (módulo opcional) depende do plano contratado e da liberação feita pelo superadmin neste cadastro. Sem o módulo, pedidos de entrega continuam — o restaurante atualiza status manualmente.',
+        'motoboys_module_label' => 'Ferramenta opcional para seus entregadores',
+        'motoboys_module_help' => 'Não são entregadores do App Cardápio: são pessoas ou empresas que o restaurante cadastra. A plataforma não faz checagem de antecedentes, CNH, documentos nem confiabilidade — a contratação e a responsabilidade são exclusivas do estabelecimento.',
+        'motoboys_plan_blocked' => 'O plano selecionado não inclui o módulo de entregadores. Para liberar, altere o plano ou mantenha o módulo desativado.',
+        'motoboys_plan_blocked_edit' => 'O plano atual deste restaurante não inclui cadastro de entregadores na plataforma.',
+        'motoboy_admin_title' => 'Entregadores do seu restaurante',
+        'motoboy_admin_body' => 'Você cadastra e gerencia sua própria equipe (ou parceiros). O App Cardápio não fornece motoboys, não valida dados informados (CPF, CNH, veículo etc.) e não garante conduta ou pontualidade. Revise documentos e combine regras diretamente com cada entregador.',
+    ],
+];

@@ -1,0 +1,294 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --brand-primary: #f4003a;
+        --brand-primary-hover: #d10032;
+        --brand-primary-soft: #fff1f4;
+        --brand-dark: #1a1a1a;
+        --brand-text: #2d2d2d;
+        --brand-muted: #6b7280;
+        --brand-border: #e5e7eb;
+        --brand-bg: #ffffff;
+        --brand-bg-soft: #f8f9fa;
+        --brand-green: #00a650;
+        --brand-green-soft: #e8f8ef;
+    }
+
+    .public-menu {
+        --menu-bg: var(--brand-bg-soft);
+        --menu-surface: var(--brand-bg);
+        --menu-text: var(--brand-dark);
+        --menu-muted: var(--brand-muted);
+        --menu-border: var(--brand-border);
+        --menu-primary: var(--primary, var(--brand-primary));
+        --menu-primary-soft: color-mix(in srgb, var(--menu-primary) 10%, white);
+        --menu-primary-hover: color-mix(in srgb, var(--menu-primary) 88%, black);
+    }
+}
+
+@layer components {
+    .menu-chip {
+        @apply shrink-0 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition;
+    }
+
+    .menu-chip-active {
+        @apply border-transparent text-white shadow-sm;
+        background-color: var(--menu-primary);
+    }
+
+    .menu-input {
+        @apply w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-transparent focus:bg-white focus:ring-2;
+        --tw-ring-color: color-mix(in srgb, var(--menu-primary) 30%, transparent);
+    }
+
+    .menu-btn-primary {
+        @apply rounded-2xl px-5 py-3 text-sm font-bold text-white shadow-md transition active:scale-[0.98] disabled:cursor-not-allowed;
+        background-color: var(--menu-primary, var(--brand-primary));
+        color: #ffffff;
+    }
+
+    .menu-btn-primary:hover:not(:disabled) {
+        background-color: var(--menu-primary-hover, var(--brand-primary-hover));
+    }
+
+    .menu-btn-primary:disabled {
+        background-color: #9ca3af;
+        color: #ffffff;
+        opacity: 1;
+    }
+
+    .menu-qty-btn {
+        @apply flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 transition hover:bg-gray-50 active:scale-95 disabled:opacity-40;
+    }
+
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
+    .brand-btn-primary {
+        @apply inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95 active:scale-[0.98] disabled:opacity-50;
+        background-color: var(--brand-primary);
+    }
+
+    .brand-btn-outline {
+        @apply inline-flex items-center justify-center rounded-full border-2 border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-800 transition hover:border-gray-300 hover:bg-gray-50 active:scale-[0.98];
+    }
+
+    /* Admin do restaurante — sidebar clara com faixa da marca */
+    .admin-shell {
+        --admin-sidebar: #fafafa;
+        --admin-sidebar-hover: #f3f4f6;
+        --admin-accent: var(--brand-primary);
+        --admin-accent-soft: var(--brand-primary-soft);
+        --admin-surface: #ffffff;
+        --admin-bg: var(--brand-bg-soft);
+        --admin-border: var(--brand-border);
+        --admin-muted: var(--brand-muted);
+        --admin-sidebar-text: #4b5563;
+        --admin-sidebar-text-active: #ffffff;
+        --admin-context-badge-bg: color-mix(in srgb, var(--admin-accent) 12%, white);
+        --admin-context-badge-text: var(--admin-accent);
+    }
+
+    .admin-sidebar {
+        background-color: var(--admin-sidebar);
+        border-left: 4px solid var(--admin-accent);
+    }
+
+    .admin-context-badge {
+        @apply inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider;
+        background-color: var(--admin-context-badge-bg);
+        color: var(--admin-context-badge-text);
+    }
+
+    .admin-top-strip {
+        height: 3px;
+        background-color: var(--admin-accent);
+    }
+
+    .admin-sidebar-link {
+        @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition;
+        color: var(--admin-sidebar-text);
+    }
+
+    .admin-sidebar-link:hover {
+        background-color: var(--admin-sidebar-hover);
+        color: var(--brand-dark);
+    }
+
+    .admin-sidebar-link-active {
+        background-color: var(--admin-accent);
+        color: var(--admin-sidebar-text-active);
+        @apply shadow-sm;
+    }
+
+    .admin-card {
+        @apply rounded-2xl border border-gray-200 bg-white p-5 shadow-sm;
+    }
+
+    .admin-page-title {
+        @apply text-2xl font-bold tracking-tight text-gray-900;
+    }
+
+    .admin-btn-primary {
+        @apply inline-flex items-center justify-center rounded-full px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-95 active:scale-[0.98] disabled:opacity-50;
+        background-color: var(--admin-accent, var(--brand-primary));
+    }
+
+    .admin-input {
+        @apply w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-red-200 focus:bg-white focus:ring-2 focus:ring-red-100;
+    }
+
+    .admin-btn-secondary {
+        @apply inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 active:scale-[0.98];
+    }
+
+    .admin-table-wrap {
+        @apply overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm;
+    }
+
+    .admin-table {
+        @apply min-w-full text-sm;
+    }
+
+    .admin-table thead {
+        @apply bg-gray-50 text-left text-gray-600;
+    }
+
+    .admin-table th,
+    .admin-table td {
+        @apply px-4 py-3;
+    }
+
+    .admin-table tbody {
+        @apply divide-y divide-gray-100;
+    }
+
+    .admin-stat-label {
+        @apply text-sm text-gray-500;
+    }
+
+    /* Superadmin — sidebar escura índigo (contraste com admin do restaurante) */
+    .platform-shell {
+        --platform-sidebar: #0f172a;
+        --platform-sidebar-hover: #1e293b;
+        --platform-accent: #6366f1;
+        --platform-accent-soft: #eef2ff;
+        --platform-bg: #f1f5f9;
+        --platform-border: #e2e8f0;
+        --platform-sidebar-text: #94a3b8;
+        --platform-sidebar-text-active: #ffffff;
+        --platform-context-badge-bg: rgb(99 102 241 / 0.25);
+        --platform-context-badge-text: #c7d2fe;
+    }
+
+    .platform-sidebar {
+        background-color: var(--platform-sidebar);
+        border-color: #1e293b;
+    }
+
+    .platform-context-badge {
+        @apply inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider;
+        background-color: var(--platform-context-badge-bg);
+        color: var(--platform-context-badge-text);
+    }
+
+    .platform-top-strip {
+        height: 3px;
+        background: linear-gradient(90deg, #4f46e5, #6366f1);
+    }
+
+    .platform-sidebar-link {
+        @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition;
+        color: var(--platform-sidebar-text);
+    }
+
+    .platform-sidebar-link:hover {
+        background-color: var(--platform-sidebar-hover);
+        color: #e2e8f0;
+    }
+
+    .platform-sidebar-link .platform-sidebar-icon {
+        @apply bg-slate-800 text-slate-400;
+    }
+
+    .platform-sidebar-link-active {
+        background-color: var(--platform-accent);
+        color: var(--platform-sidebar-text-active);
+        @apply shadow-sm;
+    }
+
+    .platform-sidebar-link-active .platform-sidebar-icon {
+        @apply bg-white/20 text-white;
+    }
+
+    .platform-sidebar-footer {
+        border-color: #1e293b;
+    }
+
+    .platform-sidebar-footer p:first-child {
+        @apply text-slate-100;
+    }
+
+    .platform-sidebar-footer p:last-child {
+        @apply text-slate-500;
+    }
+
+    .platform-header {
+        @apply border-b border-slate-200 bg-white/95;
+    }
+
+    .platform-header-context {
+        @apply text-indigo-600;
+    }
+
+    .platform-card {
+        @apply rounded-2xl border border-gray-200 bg-white p-5 shadow-sm;
+    }
+
+    .platform-btn-primary {
+        @apply inline-flex items-center justify-center rounded-full px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-95 active:scale-[0.98] disabled:opacity-50;
+        background-color: var(--platform-accent);
+    }
+
+    .platform-input {
+        @apply w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-red-200 focus:bg-white focus:ring-2 focus:ring-red-100;
+    }
+
+    .platform-btn-secondary {
+        @apply inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 active:scale-[0.98];
+    }
+
+    .platform-table-wrap {
+        @apply overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm;
+    }
+
+    .platform-table {
+        @apply min-w-full text-sm;
+    }
+
+    .platform-table thead {
+        @apply bg-gray-50 text-left text-gray-600;
+    }
+
+    .platform-table th,
+    .platform-table td {
+        @apply px-4 py-3;
+    }
+
+    .platform-table tbody {
+        @apply divide-y divide-gray-100;
+    }
+
+    .platform-stat-label {
+        @apply text-sm text-gray-500;
+    }
+}
