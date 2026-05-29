@@ -7,6 +7,7 @@ use App\Support\BranchAccess;
 use App\Support\TenantContext;
 use App\Support\PlatformCommunicationDisclaimer;
 use App\Support\TenantFeatures;
+use App\Support\PlatformGoogleMaps;
 use App\Support\TenantOrderSettings;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -91,6 +92,7 @@ class HandleInertiaRequests extends Middleware
                 'guest_access_code' => fn () => $request->session()->get('guest_access_code'),
             ],
             'communication_disclaimer' => PlatformCommunicationDisclaimer::forInertia($tenant?->name),
+            'googleMaps' => PlatformGoogleMaps::forFrontend(),
         ];
     }
 }

@@ -14,6 +14,7 @@ use App\Services\BranchHoursService;
 use App\Services\OrderItemValidationService;
 use App\Services\CouponService;
 use App\Services\DeliveryQuoteService;
+use App\Services\GeocodingService;
 use App\Services\OrderDeliveryEstimateService;
 use App\Services\OrderNotificationService;
 use App\Services\OrderPaymentService;
@@ -138,12 +139,23 @@ class CheckoutController extends Controller
             ]);
         }
 
+        $deliveryLat = isset($data['delivery_lat']) ? (float) $data['delivery_lat'] : null;
+        $deliveryLng = isset($data['delivery_lng']) ? (float) $data['delivery_lng'] : null;
+
+        if ($data['type'] === 'delivery' && ($deliveryLat === null || $deliveryLng === null) && ! empty($data['delivery_address'])) {
+            $coords = $geocoding->forward($data['delivery_address']);
+            if ($coords !== null) {
+                $deliveryLat = $coords['lat'];
+                $deliveryLng = $coords['lng'];
+            }
+        }
+
         $quote = $deliveryQuote->quote(
             $branch,
             $data['type'],
             $data['delivery_address'] ?? null,
-            isset($data['delivery_lat']) ? (float) $data['delivery_lat'] : null,
-            isset($data['delivery_lng']) ? (float) $data['delivery_lng'] : null,
+            $deliveryLat,
+            $deliveryLng,
         );
 
         $minOrder = (float) ($quote['min_order_override'] ?? $branch->minimum_order_amount ?? 0);

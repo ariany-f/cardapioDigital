@@ -33,6 +33,8 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Public\BranchController;
 use App\Http\Controllers\Public\ChatController as PublicChatController;
 use App\Http\Controllers\Public\CheckoutController;
+use App\Http\Controllers\Public\DeliveryQuoteController;
+use App\Http\Controllers\Public\GeocodeController;
 use App\Http\Controllers\Public\CustomerAuthController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\LegalController;
@@ -70,6 +72,13 @@ Route::prefix('{tenant}')
         Route::post('/checkout', [CheckoutController::class, 'store'])
             ->middleware('throttle:checkout')
             ->name('checkout');
+
+        Route::post('/geocode/forward', [GeocodeController::class, 'forward'])
+            ->middleware('throttle:public-forms')
+            ->name('geocode.forward');
+        Route::post('/geocode/reverse', [GeocodeController::class, 'reverse'])
+            ->middleware('throttle:public-forms')
+            ->name('geocode.reverse');
 
         Route::prefix('chat')->name('chat.')->middleware('throttle:chat')->group(function () {
             Route::post('/{branch}/start', [PublicChatController::class, 'start'])->name('start');
@@ -267,6 +276,11 @@ Route::prefix('{tenant}')
                     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
                 });
             });
+
+        Route::post('/{branch}/delivery-quote', [DeliveryQuoteController::class, 'quote'])
+            ->middleware('throttle:public-forms')
+            ->where('branch', '(?!admin|conta|pedido|ajuda|chat)[a-z0-9\-]+')
+            ->name('branch.delivery-quote');
 
         Route::get('/{branch}/mesa/{token}', [BranchController::class, 'showTable'])
             ->where('branch', '(?!admin|conta|pedido|ajuda|chat)[a-z0-9\-]+')

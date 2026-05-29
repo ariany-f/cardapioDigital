@@ -202,6 +202,7 @@ class BranchCatalogService
             'order_disposables' => OrderDisposableConfig::normalizeList($branch->order_disposables),
             'latitude' => $branch->latitude,
             'longitude' => $branch->longitude,
+            'has_per_km_delivery' => DeliveryQuoteService::branchUsesPerKmPricing($branch),
             'phone' => $branch->phone,
             'instagram' => InstagramLink::resolve($branch->instagram, $tenantInstagram),
             'cover_url' => MediaUrl::fromPath($branch->cover_image_path),

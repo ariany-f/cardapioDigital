@@ -1,9 +1,10 @@
 <script setup>
+import GoogleMapEmbed from '@/Components/Maps/GoogleMapEmbed.vue';
 import TenantFormFields from '@/Components/Platform/TenantFormFields.vue';
 import PlatformLayout from '@/Layouts/PlatformLayout.vue';
 import { emptyTenantEditForm, emptyTenantForm, tenantFormFromModel } from '@/composables/platformForms';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { watch } from 'vue';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { computed, watch } from 'vue';
 
 defineOptions({ layout: PlatformLayout });
 
@@ -54,6 +55,30 @@ const featureEnabled = (tenant, key) => (tenant?.settings_json?.[key] ?? true) !
 const motoboysEnabled = (tenant) => featureEnabled(tenant, 'motoboys_enabled');
 const posEnabled = (tenant) => featureEnabled(tenant, 'pos_enabled');
 const kdsEnabled = (tenant) => featureEnabled(tenant, 'kds_enabled');
+
+const page = usePage();
+const googleMaps = computed(() => page.props.googleMaps);
+
+const branchMapMarkers = computed(() => {
+    const branches = props.selectedTenant?.branches ?? [];
+    return branches
+        .filter((b) => b.latitude != null && b.longitude != null)
+        .map((b) => ({
+            lat: b.latitude,
+            lng: b.longitude,
+            title: b.name,
+        }));
+});
+
+const branchMapCenter = computed(() => {
+    const markers = branchMapMarkers.value;
+    if (!markers.length) {
+        return null;
+    }
+    const lat = markers.reduce((s, m) => s + m.lat, 0) / markers.length;
+    const lng = markers.reduce((s, m) => s + m.lng, 0) / markers.length;
+    return { lat, lng };
+});
 
 const formatRestaurantRating = (summary) => {
     if (!summary?.count || summary.restaurant == null) {
@@ -212,6 +237,17 @@ const formatRestaurantRating = (summary) => {
                     <dd class="inline ml-1">{{ selectedTenant.phone }}</dd>
                 </div>
             </dl>
+            <div v-if="googleMaps?.api_key && branchMapCenter" class="mt-4">
+                <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Mapa das filiais</p>
+                <GoogleMapEmbed
+                    :api-key="googleMaps.api_key"
+                    :center="branchMapCenter"
+                    :markers="branchMapMarkers"
+                    :zoom="branchMapMarkers.length > 1 ? 12 : 15"
+                    height="220px"
+                />
+            </div>
+
             <div class="mt-4">
                 <Link
                     :href="route('tenant.admin.dashboard', { tenant: selectedTenant.slug })"

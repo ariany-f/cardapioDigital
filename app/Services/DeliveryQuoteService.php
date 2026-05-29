@@ -8,6 +8,15 @@ use Illuminate\Validation\ValidationException;
 
 class DeliveryQuoteService
 {
+    public static function branchUsesPerKmPricing(Branch $branch): bool
+    {
+        return DeliveryZone::query()
+            ->where('branch_id', $branch->id)
+            ->where('is_active', true)
+            ->where('type', 'per_km')
+            ->exists();
+    }
+
     public function quote(Branch $branch, string $type, ?array $address = null, ?float $customerLat = null, ?float $customerLng = null): array
     {
         if ($type !== 'delivery') {

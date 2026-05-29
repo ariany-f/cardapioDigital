@@ -47,7 +47,7 @@ class SecurityHeaders
             "object-src 'none'",
             "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com",
             "style-src 'self' 'unsafe-inline'",
-            "img-src 'self' data: https: blob:",
+            "img-src 'self' data: https: blob: https://maps.googleapis.com https://maps.gstatic.com",
             "font-src 'self' data: https:",
             "connect-src 'self' https: wss:",
         ]);

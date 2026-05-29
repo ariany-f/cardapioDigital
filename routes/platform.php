@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Platform\MarketingLeadController;
 use App\Http\Controllers\Platform\PlanController;
+use App\Http\Controllers\Platform\PlatformGoogleMapsSettingsController;
 use App\Http\Controllers\Platform\PlatformMailSettingsController;
 use App\Http\Controllers\Platform\PlatformSeoSettingsController;
 use App\Http\Controllers\Platform\TenantSeoController;
@@ -58,6 +59,9 @@ Route::prefix('platform')->name('platform.')->group(function () {
 
         Route::get('settings/seo', [PlatformSeoSettingsController::class, 'edit'])->name('settings.seo');
         Route::put('settings/seo', [PlatformSeoSettingsController::class, 'update'])->name('settings.seo.update');
+
+        Route::get('settings/maps', [PlatformGoogleMapsSettingsController::class, 'edit'])->name('settings.maps');
+        Route::put('settings/maps', [PlatformGoogleMapsSettingsController::class, 'update'])->name('settings.maps.update');
 
         Route::get('tenants/{tenant}/seo', [TenantSeoController::class, 'edit'])->name('tenants.seo.edit');
         Route::put('tenants/{tenant}/seo', [TenantSeoController::class, 'update'])->name('tenants.seo.update');

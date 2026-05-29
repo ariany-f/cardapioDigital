@@ -64,6 +64,11 @@ const emit = defineEmits([
 const step = ref('items');
 const deliveryLat = ref(null);
 const deliveryLng = ref(null);
+const deliveryFee = ref(0);
+const deliveryDistanceKm = ref(null);
+const deliveryQuoteLoading = ref(false);
+const deliveryQuoteError = ref('');
+let deliveryQuoteTimer = null;
 const cepLoading = ref(false);
 const cepMessage = ref('');
 const cepError = ref('');
@@ -79,7 +84,11 @@ const subtotal = computed(() =>
 
 const tipValue = computed(() => Math.max(0, parseFloat(props.tipAmount) || 0));
 
-const displayTotal = computed(() => subtotal.value + tipValue.value);
+const deliveryFeeValue = computed(() =>
+    props.orderType === 'delivery' ? Math.max(0, deliveryFee.value || 0) : 0,
+);
+
+const displayTotal = computed(() => subtotal.value + tipValue.value + deliveryFeeValue.value);
 
 const itemCount = computed(() => props.cart.reduce((sum, item) => sum + item.quantity, 0));
 
@@ -117,12 +126,13 @@ const orderEstimateLabel = computed(() => {
 const needsGeo = computed(
     () =>
         props.orderType === 'delivery' &&
-        props.branch.delivery_radius_km &&
-        props.branch.latitude &&
-        props.branch.longitude,
+        (props.branch.has_per_km_delivery ||
+            (props.branch.delivery_radius_km && props.branch.latitude && props.branch.longitude)),
 );
 
 const page = usePage();
+const tenantSlug = computed(() => page.props.tenant?.slug ?? '');
+const googleMaps = computed(() => page.props.googleMaps);
 const t = (key) => page.props.translations?.[key] ?? key;
 
 const formatPrice = (value) =>
@@ -174,7 +184,7 @@ const syncCoordsForRadius = async () => {
     if (!a.street?.trim() || !a.city?.trim()) {
         return;
     }
-    const geo = await forwardGeocode(a);
+    const geo = await forwardGeocode(a, tenantSlug.value);
     if (geo.ok) {
         deliveryLat.value = geo.lat;
         deliveryLng.value = geo.lng;
@@ -192,7 +202,7 @@ const lookupCep = async (digits) => {
     cepMessage.value = '';
     geoError.value = '';
 
-    const result = await resolveDeliveryAddress(digits);
+    const result = await resolveDeliveryAddress(digits, tenantSlug.value);
 
     cepLoading.value = false;
 
@@ -281,7 +291,7 @@ const requestLocationOnly = async () => {
     deliveryLat.value = position.lat;
     deliveryLng.value = position.lng;
 
-    const reversed = await reverseGeocode(position.lat, position.lng);
+    const reversed = await reverseGeocode(position.lat, position.lng, tenantSlug.value);
     locating.value = false;
 
     if (!reversed.ok) {
@@ -343,6 +353,111 @@ watch(
     },
 );
 
+function csrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+}
+
+const canRequestDeliveryQuote = () => {
+    if (props.orderType !== 'delivery' || !props.branch.delivery_available) {
+        return false;
+    }
+    const a = props.deliveryAddress;
+    if (deliveryLat.value != null && deliveryLng.value != null) {
+        return true;
+    }
+    if (a.street?.trim() && a.city?.trim()) {
+        return true;
+    }
+    return isValidCep(a.postal_code) && Boolean(a.neighborhood?.trim());
+};
+
+const fetchDeliveryQuote = async () => {
+    if (!canRequestDeliveryQuote() || !tenantSlug.value) {
+        deliveryFee.value = 0;
+        deliveryDistanceKm.value = null;
+        deliveryQuoteError.value = '';
+        return;
+    }
+
+    deliveryQuoteLoading.value = true;
+    deliveryQuoteError.value = '';
+
+    try {
+        const res = await fetch(
+            route('tenant.branch.delivery-quote', {
+                tenant: tenantSlug.value,
+                branch: props.branch.slug,
+            }),
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    delivery_address: props.deliveryAddress,
+                    delivery_lat: deliveryLat.value,
+                    delivery_lng: deliveryLng.value,
+                }),
+            },
+        );
+
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+            deliveryFee.value = 0;
+            deliveryDistanceKm.value = null;
+            deliveryQuoteError.value = data.message ?? 'Não foi possível calcular a entrega.';
+            return;
+        }
+
+        deliveryFee.value = parseFloat(data.fee) || 0;
+        deliveryDistanceKm.value = data.distance_km ?? null;
+        if (data.delivery_lat != null && data.delivery_lng != null) {
+            deliveryLat.value = data.delivery_lat;
+            deliveryLng.value = data.delivery_lng;
+        }
+        geoError.value = '';
+    } catch {
+        deliveryQuoteError.value = 'Erro ao calcular taxa de entrega.';
+    } finally {
+        deliveryQuoteLoading.value = false;
+    }
+};
+
+const scheduleDeliveryQuote = () => {
+    if (deliveryQuoteTimer) {
+        clearTimeout(deliveryQuoteTimer);
+    }
+    deliveryQuoteTimer = setTimeout(() => fetchDeliveryQuote(), 500);
+};
+
+watch(
+    () => [
+        props.orderType,
+        props.deliveryAddress.street,
+        props.deliveryAddress.number,
+        props.deliveryAddress.neighborhood,
+        props.deliveryAddress.city,
+        props.deliveryAddress.state,
+        props.deliveryAddress.postal_code,
+        deliveryLat.value,
+        deliveryLng.value,
+    ],
+    () => {
+        if (props.orderType === 'delivery') {
+            scheduleDeliveryQuote();
+        } else {
+            deliveryFee.value = 0;
+            deliveryDistanceKm.value = null;
+            deliveryQuoteError.value = '';
+        }
+    },
+);
+
 const showAddressFields = computed(
     () =>
         isValidCep(props.deliveryAddress.postal_code) ||
@@ -363,11 +478,19 @@ const missingFields = computed(() => {
         if (!a.neighborhood?.trim()) list.push('bairro');
         if (!a.city?.trim()) list.push('cidade');
         if (needsGeo.value && deliveryLat.value === null) list.push('localização');
+        if (deliveryQuoteError.value) list.push('entrega válida');
+        if (deliveryQuoteLoading.value) list.push('cálculo da entrega');
     }
     return list;
 });
 
-const canSubmit = computed(() => missingFields.value.length === 0 && props.cart.length > 0);
+const canSubmit = computed(
+    () =>
+        missingFields.value.length === 0 &&
+        props.cart.length > 0 &&
+        !deliveryQuoteLoading.value &&
+        !deliveryQuoteError.value,
+);
 
 const goCheckout = () => {
     if (!props.canCheckout || !props.cart.length) return;
@@ -790,6 +913,15 @@ defineExpose({ deliveryLat, deliveryLng });
                             </template>
                         </button>
                         <p v-if="geoError" class="text-xs text-red-600">{{ geoError }}</p>
+                        <p v-if="deliveryQuoteLoading" class="text-xs text-stone-500">Calculando taxa de entrega...</p>
+                        <p v-else-if="deliveryQuoteError" class="text-xs text-red-600">{{ deliveryQuoteError }}</p>
+                        <p
+                            v-else-if="deliveryFeeValue > 0 || deliveryDistanceKm != null"
+                            class="text-xs font-medium text-emerald-800"
+                        >
+                            Entrega: {{ formatPrice(deliveryFeeValue) }}
+                            <span v-if="deliveryDistanceKm != null"> · {{ deliveryDistanceKm.toFixed(1) }} km</span>
+                        </p>
                     </div>
                 </div>
 
@@ -888,6 +1020,10 @@ defineExpose({ deliveryLat, deliveryLng });
                 <div class="flex justify-between">
                     <span class="text-stone-500">Subtotal</span>
                     <span class="font-medium text-stone-900">{{ formatPrice(subtotal) }}</span>
+                </div>
+                <div v-if="orderType === 'delivery' && deliveryFeeValue > 0" class="flex justify-between">
+                    <span class="text-stone-500">Entrega</span>
+                    <span class="font-medium text-stone-900">{{ formatPrice(deliveryFeeValue) }}</span>
                 </div>
                 <div v-if="tipValue > 0" class="flex justify-between">
                     <span class="text-stone-500">Gorjeta</span>

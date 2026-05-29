@@ -4,6 +4,7 @@ import SeoHead from '@/Components/SeoHead.vue';
 import ChatWidget from '@/Components/Public/ChatWidget.vue';
 import MenuCart from '@/Components/Public/MenuCart.vue';
 import MenuProductCard from '@/Components/Public/MenuProductCard.vue';
+import BranchMapModal from '@/Components/Maps/BranchMapModal.vue';
 import MenuProductModal from '@/Components/Public/MenuProductModal.vue';
 import PublicMenuLayout from '@/Layouts/PublicMenuLayout.vue';
 import { markChatPurchasedLocal } from '@/composables/useChatEligibility';
@@ -118,6 +119,11 @@ const filteredCategories = computed(() => {
         .filter((cat) => cat.products.length > 0);
 });
 const mobileCartOpen = ref(false);
+const mapOpen = ref(false);
+const googleMaps = computed(() => page.props.googleMaps);
+const showMapButton = computed(
+    () => googleMaps.value?.api_key && props.branch.latitude != null && props.branch.longitude != null,
+);
 const processing = ref(false);
 const desktopCartRef = ref(null);
 const mobileCartRef = ref(null);

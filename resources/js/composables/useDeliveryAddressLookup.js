@@ -3,6 +3,28 @@ const NOMINATIM_HEADERS = {
     'Accept-Language': 'pt-BR',
 };
 
+function csrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+}
+
+async function postJson(url, body) {
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'X-CSRF-TOKEN': csrfToken(),
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify(body),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    return { ok: res.ok, data };
+}
+
 function onlyDigits(value) {
     return String(value ?? '').replace(/\D/g, '');
 }
@@ -100,7 +122,14 @@ export function getBrowserPosition() {
 /**
  * @returns {Promise<{ ok: true, address: object } | { ok: false, error: string }>}
  */
-export async function reverseGeocode(lat, lng) {
+export async function reverseGeocode(lat, lng, tenantSlug = null) {
+    if (tenantSlug) {
+        const { ok, data } = await postJson(route('tenant.geocode.reverse', { tenant: tenantSlug }), { lat, lng });
+        if (ok && data.ok && data.address) {
+            return { ok: true, address: data.address };
+        }
+    }
+
     try {
         const url = new URL('https://nominatim.openstreetmap.org/reverse');
         url.searchParams.set('format', 'json');
@@ -137,7 +166,14 @@ export async function reverseGeocode(lat, lng) {
 /**
  * Tenta obter coordenadas a partir do endereço preenchido (raio de entrega).
  */
-export async function forwardGeocode(address) {
+export async function forwardGeocode(address, tenantSlug = null) {
+    if (tenantSlug) {
+        const { ok, data } = await postJson(route('tenant.geocode.forward', { tenant: tenantSlug }), address);
+        if (ok && data.ok) {
+            return { ok: true, lat: data.lat, lng: data.lng };
+        }
+    }
+
     const parts = [
         address.street,
         address.number,
@@ -182,7 +218,7 @@ export async function forwardGeocode(address) {
 /**
  * ViaCEP primeiro; se falhar, usa GPS + reverse geocode.
  */
-export async function resolveDeliveryAddress(cep) {
+export async function resolveDeliveryAddress(cep, tenantSlug = null) {
     const viaCep = await lookupViaCep(cep);
     if (viaCep.ok) {
         return { ...viaCep, source: 'viacep' };
@@ -193,7 +229,7 @@ export async function resolveDeliveryAddress(cep) {
         return { ok: false, error: viaCep.error, fallbackError: position.error };
     }
 
-    const reversed = await reverseGeocode(position.lat, position.lng);
+    const reversed = await reverseGeocode(position.lat, position.lng, tenantSlug);
     if (!reversed.ok) {
         return {
             ok: false,
