@@ -56,6 +56,7 @@ class OrderController extends Controller
             'branch',
             'customer',
             'delivery.motoboy',
+            'delivery.statusHistories' => fn ($q) => $q->orderBy('created_at'),
             'approvedByUser:id,name',
             'cancelledByUser:id,name',
             'rejectedByUser:id,name',
@@ -65,12 +66,13 @@ class OrderController extends Controller
         ]);
 
         $tenant = TenantContext::get();
-        $motoboysEnabled = TenantFeatures::motoboysEnabled($tenant);
+        $motoboysCanManage = TenantFeatures::motoboysEnabled($tenant);
 
         return Inertia::render('Admin/Orders/Show', [
             'order' => $this->orderShowPayload($order, $logger),
-            'motoboys_enabled' => $motoboysEnabled,
-            'motoboys' => $motoboysEnabled
+            'motoboys_enabled' => $motoboysCanManage,
+            'motoboys_can_manage' => $motoboysCanManage,
+            'motoboys' => $motoboysCanManage
                 ? \App\Models\Motoboy::query()
                     ->where('is_active', true)
                     ->with('branches:id,name')
@@ -221,6 +223,21 @@ class OrderController extends Controller
             'copy_paste' => $p->copy_paste,
             'paid_at' => $p->paid_at?->format('d/m/Y H:i'),
         ]);
+
+        if ($order->relationLoaded('delivery') && $order->delivery) {
+            $delivery = $order->delivery;
+            $data['delivery'] = [
+                ...$delivery->toArray(),
+                'motoboy' => $delivery->motoboy?->toArray(),
+                'status_histories' => $delivery->statusHistories->map(fn ($h) => [
+                    'id' => $h->id,
+                    'status' => $h->status,
+                    'origin' => $h->origin,
+                    'created_at' => $h->created_at?->toIso8601String(),
+                    'created_at_formatted' => $h->created_at?->format('d/m/Y H:i:s'),
+                ]),
+            ];
+        }
 
         return $data;
     }

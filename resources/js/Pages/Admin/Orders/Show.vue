@@ -142,6 +142,17 @@ const vehicleLabel = (type) => {
 
 const assignedMotoboy = computed(() => props.order.delivery?.motoboy);
 
+const deliveryStatusHistories = computed(() => props.order.delivery?.status_histories ?? []);
+
+const motoboyAssignmentLabel = (status) => {
+    const map = {
+        pending: 'Aguardando aceite',
+        accepted: 'Aceito',
+        rejected: 'Recusado',
+    };
+    return map[status] ?? status;
+};
+
 const markPaid = () => {
     if (!confirm('Confirmar que o pagamento foi recebido?')) return;
     router.post(route('tenant.admin.orders.paid', { tenant: tenant.slug, order: props.order.id }));
@@ -365,11 +376,63 @@ const submitStatusCorrection = () => {
                     <dt class="text-stone-500">Entregador</dt>
                     <dd class="mt-0.5 font-medium text-stone-900">{{ assignedMotoboy.name }}</dd>
                 </div>
+                <div v-if="order.delivery?.motoboy_assignment_status">
+                    <dt class="text-stone-500">Atribuição</dt>
+                    <dd class="mt-0.5 font-medium text-stone-900">
+                        {{ motoboyAssignmentLabel(order.delivery.motoboy_assignment_status) }}
+                    </dd>
+                </div>
                 <div v-if="order.audit?.delivery_confirmed_at">
                     <dt class="text-stone-500">Confirmada em</dt>
                     <dd class="mt-0.5 font-medium text-stone-900">{{ order.audit.delivery_confirmed_at }}</dd>
                 </div>
             </dl>
+            <div
+                v-if="assignedMotoboy"
+                class="mt-4 rounded-xl border border-stone-200 bg-stone-50 p-4 text-sm"
+            >
+                <h3 class="font-semibold text-stone-900">Detalhes do entregador</h3>
+                <p v-if="!motoboys_enabled" class="mt-1 text-xs text-stone-500">
+                    Módulo de entregadores desativado — informações mantidas para consulta do pedido.
+                </p>
+                <dl class="mt-3 grid gap-2 sm:grid-cols-2">
+                    <div v-if="assignedMotoboy.phone">
+                        <dt class="text-stone-500">Telefone</dt>
+                        <dd>
+                            {{ assignedMotoboy.phone }}
+                            <a
+                                v-if="assignedMotoboy.whatsapp_url"
+                                :href="assignedMotoboy.whatsapp_url"
+                                target="_blank"
+                                rel="noopener"
+                                class="ml-2 font-semibold text-green-700 hover:underline"
+                            >
+                                WhatsApp
+                            </a>
+                        </dd>
+                    </div>
+                    <div v-if="assignedMotoboy.vehicle_type">
+                        <dt class="text-stone-500">Veículo</dt>
+                        <dd>
+                            {{ vehicleLabel(assignedMotoboy.vehicle_type) }}
+                            <span v-if="assignedMotoboy.vehicle"> — {{ assignedMotoboy.vehicle }}</span>
+                            <span v-if="assignedMotoboy.license_plate"> ({{ assignedMotoboy.license_plate }})</span>
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+            <div v-if="deliveryStatusHistories.length" class="mt-4">
+                <h3 class="text-sm font-semibold text-stone-900">Histórico da entrega</h3>
+                <ul class="mt-2 space-y-1.5 text-sm text-stone-700">
+                    <li v-for="h in deliveryStatusHistories" :key="h.id">
+                        <span class="font-medium">{{ deliveryStatusLabel(h.status) }}</span>
+                        <span class="text-stone-500">
+                            — {{ h.created_at_formatted ?? h.created_at }}
+                            <template v-if="h.origin"> · {{ h.origin }}</template>
+                        </span>
+                    </li>
+                </ul>
+            </div>
         </template>
 
         <template v-else>
@@ -443,9 +506,15 @@ const submitStatusCorrection = () => {
             <button type="submit" class="admin-btn-primary sm:col-span-2">Atualizar entrega</button>
         </form>
 
-        <div v-if="motoboys_enabled && assignedMotoboy" class="mt-4 rounded-xl border border-stone-200 bg-stone-50 p-4 text-sm">
+        <div v-if="assignedMotoboy" class="mt-4 rounded-xl border border-stone-200 bg-stone-50 p-4 text-sm">
             <h3 class="font-semibold text-stone-900">Entregador atribuído</h3>
-            <p v-if="!assignedMotoboy.uses_app" class="mt-2 rounded-lg bg-amber-100 px-3 py-2 text-xs text-amber-950">
+            <p v-if="!motoboys_enabled" class="mt-2 rounded-lg bg-stone-100 px-3 py-2 text-xs text-stone-700">
+                Módulo de entregadores desativado — dados exibidos apenas para consulta deste pedido.
+            </p>
+            <p
+                v-else-if="!assignedMotoboy.uses_app"
+                class="mt-2 rounded-lg bg-amber-100 px-3 py-2 text-xs text-amber-950"
+            >
                 Este entregador não usa o app — imprima a comanda e atualize o status da entrega aqui no painel.
             </p>
             <p
@@ -491,6 +560,18 @@ const submitStatusCorrection = () => {
                     </dd>
                 </div>
             </dl>
+        </div>
+        <div v-if="deliveryStatusHistories.length" class="mt-4">
+            <h3 class="text-sm font-semibold text-stone-900">Histórico da entrega</h3>
+            <ul class="mt-2 space-y-1.5 text-sm text-stone-700">
+                <li v-for="h in deliveryStatusHistories" :key="h.id">
+                    <span class="font-medium">{{ deliveryStatusLabel(h.status) }}</span>
+                    <span class="text-stone-500">
+                        — {{ h.created_at_formatted ?? h.created_at }}
+                        <template v-if="h.origin"> · {{ h.origin }}</template>
+                    </span>
+                </li>
+            </ul>
         </div>
         </template>
     </div>

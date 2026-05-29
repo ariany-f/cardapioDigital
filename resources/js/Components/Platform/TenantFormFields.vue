@@ -15,6 +15,8 @@ const props = defineProps({
     motoboysDisableBlocked: { type: Boolean, default: false },
     motoboyDeliveriesInProgressCount: { type: Number, default: 0 },
     planMotoboysIncluded: { type: Boolean, default: true },
+    planPosIncluded: { type: Boolean, default: true },
+    planKdsIncluded: { type: Boolean, default: true },
     inputClass: { type: String, default: 'platform-input' },
     labelClass: { type: String, default: 'mb-1 block text-sm font-medium text-slate-700' },
 });
@@ -28,18 +30,44 @@ const selectedPlan = computed(() =>
         : null,
 );
 
-const planAllowsMotoboys = computed(() => {
+const planFeatureAllowed = (key, fallbackProp) => {
     if (selectedPlan.value?.features_json) {
-        return selectedPlan.value.features_json.motoboys !== false;
+        return selectedPlan.value.features_json[key] === true;
     }
-    return props.planMotoboysIncluded;
-});
+    return fallbackProp;
+};
+
+const planAllowsMotoboys = computed(() => planFeatureAllowed('motoboys', props.planMotoboysIncluded));
+const planAllowsPos = computed(() => planFeatureAllowed('pos', props.planPosIncluded));
+const planAllowsKds = computed(() => planFeatureAllowed('kds', props.planKdsIncluded));
+
+const plansT = () => page.props.platformTranslations?.plans ?? {};
 
 watch(
     planAllowsMotoboys,
     (allowed) => {
         if (!allowed) {
             props.form.motoboys_enabled = false;
+        }
+    },
+    { immediate: true },
+);
+
+watch(
+    planAllowsPos,
+    (allowed) => {
+        if (!allowed) {
+            props.form.pos_enabled = false;
+        }
+    },
+    { immediate: true },
+);
+
+watch(
+    planAllowsKds,
+    (allowed) => {
+        if (!allowed) {
+            props.form.kds_enabled = false;
         }
     },
     { immediate: true },
@@ -279,23 +307,51 @@ const timezoneOptions = computed(() => {
                 {{ form.errors.motoboys_enabled }}
             </p>
         </label>
-        <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 bg-white p-3">
-            <input v-model="form.pos_enabled" type="checkbox" class="mt-1 rounded border-slate-300" />
-            <span>
-                <span class="block text-sm font-semibold text-slate-900">PDV (balcão)</span>
-                <span class="mt-1 block text-xs text-slate-600">
-                    Desligado: o menu PDV some do painel. Pedidos online e demais funções continuam normais.
+        <label
+            class="flex flex-col gap-3 rounded-lg border p-3"
+            :class="planAllowsPos ? 'cursor-pointer border-slate-200 bg-white' : 'border-slate-200 bg-slate-50'"
+        >
+            <span class="flex items-start gap-3">
+                <input
+                    v-model="form.pos_enabled"
+                    type="checkbox"
+                    class="mt-1 rounded border-slate-300"
+                    :disabled="!planAllowsPos"
+                />
+                <span>
+                    <span class="block text-sm font-semibold text-slate-900">PDV (balcão)</span>
+                    <span class="mt-1 block text-xs text-slate-600">
+                        Desligado: o menu PDV some do painel. Pedidos online e demais funções continuam normais.
+                    </span>
                 </span>
             </span>
+            <p v-if="!planAllowsPos" class="text-xs font-medium text-amber-800">
+                {{ showPlan ? plansT().pos_plan_blocked : plansT().pos_plan_blocked_edit }}
+            </p>
+            <p v-if="form.errors.pos_enabled" class="text-xs font-medium text-red-600">{{ form.errors.pos_enabled }}</p>
         </label>
-        <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 bg-white p-3">
-            <input v-model="form.kds_enabled" type="checkbox" class="mt-1 rounded border-slate-300" />
-            <span>
-                <span class="block text-sm font-semibold text-slate-900">KDS (cozinha)</span>
-                <span class="mt-1 block text-xs text-slate-600">
-                    Desligado: painel da cozinha some do menu. A produção pode ser acompanhada na tela de pedidos.
+        <label
+            class="flex flex-col gap-3 rounded-lg border p-3"
+            :class="planAllowsKds ? 'cursor-pointer border-slate-200 bg-white' : 'border-slate-200 bg-slate-50'"
+        >
+            <span class="flex items-start gap-3">
+                <input
+                    v-model="form.kds_enabled"
+                    type="checkbox"
+                    class="mt-1 rounded border-slate-300"
+                    :disabled="!planAllowsKds"
+                />
+                <span>
+                    <span class="block text-sm font-semibold text-slate-900">KDS (cozinha)</span>
+                    <span class="mt-1 block text-xs text-slate-600">
+                        Desligado: painel da cozinha some do menu. A produção pode ser acompanhada na tela de pedidos.
+                    </span>
                 </span>
             </span>
+            <p v-if="!planAllowsKds" class="text-xs font-medium text-amber-800">
+                {{ showPlan ? plansT().kds_plan_blocked : plansT().kds_plan_blocked_edit }}
+            </p>
+            <p v-if="form.errors.kds_enabled" class="text-xs font-medium text-red-600">{{ form.errors.kds_enabled }}</p>
         </label>
     </FormSection>
 </template>

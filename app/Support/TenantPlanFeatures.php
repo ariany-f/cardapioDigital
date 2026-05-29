@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Plan;
 use App\Models\Tenant;
 
 class TenantPlanFeatures
@@ -14,12 +15,17 @@ class TenantPlanFeatures
             return true;
         }
 
-        $features = $subscription->plan->features_json ?? [];
+        return self::planAllows($subscription->plan, $feature);
+    }
 
-        if (! array_key_exists($feature, $features)) {
+    public static function planAllows(?Plan $plan, string $feature): bool
+    {
+        if (! $plan) {
             return true;
         }
 
-        return (bool) $features[$feature];
+        $features = $plan->features_json ?? [];
+
+        return (bool) ($features[$feature] ?? false);
     }
 }

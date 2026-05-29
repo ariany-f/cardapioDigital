@@ -368,6 +368,8 @@ const formatRestaurantRating = (summary) => {
             :timezones="timezones"
             :plans="plans"
             :plan-motoboys-included="editingTenant?.plan_motoboys_included ?? true"
+            :plan-pos-included="editingTenant?.plan_pos_included ?? true"
+            :plan-kds-included="editingTenant?.plan_kds_included ?? true"
             :motoboys-disable-blocked="editingTenant?.motoboys_disable_blocked"
             :motoboy-deliveries-in-progress-count="editingTenant?.motoboy_deliveries_in_progress_count ?? 0"
         />

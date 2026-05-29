@@ -50,6 +50,10 @@ return [
             'pos' => 'PDV / balcão',
             'motoboys' => 'Módulo de entregadores',
         ],
+        'pos_plan_blocked' => 'O plano selecionado não inclui PDV. Altere o plano ou mantenha o módulo desativado.',
+        'pos_plan_blocked_edit' => 'O plano atual deste restaurante não inclui PDV na plataforma.',
+        'kds_plan_blocked' => 'O plano selecionado não inclui KDS. Altere o plano ou mantenha o módulo desativado.',
+        'kds_plan_blocked_edit' => 'O plano atual deste restaurante não inclui KDS na plataforma.',
     ],
 
     'delivery' => [

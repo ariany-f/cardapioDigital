@@ -11,6 +11,7 @@ use Illuminate\Validation\ValidationException;
 use App\Models\TenantSubscription;
 use App\Services\OrderRatingService;
 use App\Support\TenantFeatures;
+use App\Support\TenantPlanFeatures;
 use App\Support\TenantRegionalOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -155,34 +156,40 @@ class TenantController extends Controller
      */
     protected function applyTenantFeatureFlags(Tenant $tenant, array $data, ?int $planId = null): void
     {
-        if (array_key_exists('motoboys_enabled', $data)) {
-            $enabled = filter_var($data['motoboys_enabled'], FILTER_VALIDATE_BOOLEAN);
-            if ($enabled && ! $this->planIncludesMotoboys($planId, $tenant)) {
-                throw ValidationException::withMessages([
-                    'motoboys_enabled' => [__('platform.delivery.motoboys_plan_blocked')],
-                ]);
-            }
-            TenantFeatures::setMotoboysEnabled($tenant, $enabled);
-        }
+        $plan = $planId
+            ? Plan::query()->find($planId)
+            : $tenant->activeSubscription()->with('plan')->first()?->plan;
 
-        if (array_key_exists('pos_enabled', $data)) {
-            TenantFeatures::setPosEnabled($tenant, (bool) $data['pos_enabled']);
-        }
-
-        if (array_key_exists('kds_enabled', $data)) {
-            TenantFeatures::setKdsEnabled($tenant, (bool) $data['kds_enabled']);
-        }
+        $this->applyTenantFeatureFlag($tenant, $data, $plan, 'motoboys', 'motoboys_enabled', 'platform.delivery.motoboys_plan_blocked', fn (Tenant $t, bool $enabled) => TenantFeatures::setMotoboysEnabled($t, $enabled));
+        $this->applyTenantFeatureFlag($tenant, $data, $plan, 'pos', 'pos_enabled', 'platform.plans.pos_plan_blocked', fn (Tenant $t, bool $enabled) => TenantFeatures::setPosEnabled($t, $enabled));
+        $this->applyTenantFeatureFlag($tenant, $data, $plan, 'kds', 'kds_enabled', 'platform.plans.kds_plan_blocked', fn (Tenant $t, bool $enabled) => TenantFeatures::setKdsEnabled($t, $enabled));
     }
 
-    protected function planIncludesMotoboys(?int $planId, ?Tenant $tenant): bool
-    {
-        if ($planId) {
-            $plan = Plan::query()->find($planId);
-
-            return $plan ? (($plan->features_json['motoboys'] ?? true) !== false) : true;
+    /**
+     * @param  callable(Tenant, bool): void  $setter
+     */
+    protected function applyTenantFeatureFlag(
+        Tenant $tenant,
+        array $data,
+        ?Plan $plan,
+        string $planFeature,
+        string $inputKey,
+        string $blockedMessageKey,
+        callable $setter,
+    ): void {
+        if (! array_key_exists($inputKey, $data)) {
+            return;
         }
 
-        return TenantFeatures::motoboysAllowedByPlan($tenant);
+        $enabled = filter_var($data[$inputKey], FILTER_VALIDATE_BOOLEAN);
+
+        if ($enabled && ! TenantPlanFeatures::planAllows($plan, $planFeature)) {
+            throw ValidationException::withMessages([
+                $inputKey => [__($blockedMessageKey)],
+            ]);
+        }
+
+        $setter($tenant, $enabled);
     }
 
     /**
@@ -195,6 +202,8 @@ class TenantController extends Controller
         $data['motoboys_disable_blocked'] = TenantFeatures::hasMotoboyDeliveriesInProgress($tenant);
         $data['motoboy_deliveries_in_progress_count'] = TenantFeatures::motoboyDeliveriesInProgressCount($tenant);
         $data['plan_motoboys_included'] = TenantFeatures::motoboysAllowedByPlan($tenant);
+        $data['plan_pos_included'] = TenantFeatures::posAllowedByPlan($tenant);
+        $data['plan_kds_included'] = TenantFeatures::kdsAllowedByPlan($tenant);
 
         return $data;
     }

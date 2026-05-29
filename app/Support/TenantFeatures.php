@@ -66,6 +66,15 @@ class TenantFeatures
             ->whereHas('order', fn ($query) => $query->whereNotIn('status', ['delivered', 'cancelled', 'rejected']));
     }
 
+    public static function posAllowedByPlan(?Tenant $tenant): bool
+    {
+        if (! $tenant) {
+            return true;
+        }
+
+        return TenantPlanFeatures::has($tenant, 'pos');
+    }
+
     public static function posEnabled(?Tenant $tenant): bool
     {
         if (! $tenant) {
@@ -74,12 +83,25 @@ class TenantFeatures
 
         $settings = $tenant->settings_json ?? [];
 
-        return ($settings['pos_enabled'] ?? true) !== false;
+        if (($settings['pos_enabled'] ?? true) === false) {
+            return false;
+        }
+
+        return TenantPlanFeatures::has($tenant, 'pos');
     }
 
     public static function setPosEnabled(Tenant $tenant, bool $enabled): void
     {
         self::merge($tenant, ['pos_enabled' => $enabled]);
+    }
+
+    public static function kdsAllowedByPlan(?Tenant $tenant): bool
+    {
+        if (! $tenant) {
+            return true;
+        }
+
+        return TenantPlanFeatures::has($tenant, 'kds');
     }
 
     public static function kdsEnabled(?Tenant $tenant): bool
@@ -90,7 +112,11 @@ class TenantFeatures
 
         $settings = $tenant->settings_json ?? [];
 
-        return ($settings['kds_enabled'] ?? true) !== false;
+        if (($settings['kds_enabled'] ?? true) === false) {
+            return false;
+        }
+
+        return TenantPlanFeatures::has($tenant, 'kds');
     }
 
     public static function setKdsEnabled(Tenant $tenant, bool $enabled): void
