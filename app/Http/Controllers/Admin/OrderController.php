@@ -14,7 +14,7 @@ use App\Services\DeliveryConfirmationService;
 use App\Services\OrderCorrectionService;
 use App\Services\OrderPaymentService;
 use App\Support\TenantContext;
-use App\Support\TenantFeatures;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -40,6 +40,15 @@ class OrderController extends Controller
             'orders' => $orders,
             'filters' => $request->only('status'),
         ]);
+    }
+
+    public function pendingCount(): JsonResponse
+    {
+        $total = $this->ordersQuery()
+            ->where('status', 'pending_approval')
+            ->count();
+
+        return response()->json(['total' => $total]);
     }
 
     public function show(string $tenant, Order $order, ActivityLogService $logger): Response

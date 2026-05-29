@@ -2,6 +2,7 @@
 import LegalFooter from '@/Components/Public/LegalFooter.vue';
 import NavIcon from '@/Components/NavIcon.vue';
 import { useAdminChatUnread } from '@/composables/useAdminChatUnread';
+import { useAdminOrdersPending } from '@/composables/useAdminOrdersPending';
 import { usePermissions } from '@/composables/usePermissions';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
@@ -9,6 +10,7 @@ import { computed, ref } from 'vue';
 const page = usePage();
 const { can } = usePermissions();
 const { totalUnread: chatUnreadTotal } = useAdminChatUnread();
+const { pendingTotal: ordersPendingTotal } = useAdminOrdersPending();
 const sidebarOpen = ref(false);
 
 const tenant = computed(() => page.props.tenant);
@@ -152,6 +154,13 @@ const logout = () => router.post(route('logout'));
                         <NavIcon :name="item.icon" />
                     </span>
                     <span class="truncate">{{ item.label }}</span>
+                    <span
+                        v-if="item.route === 'tenant.admin.orders.index' && ordersPendingTotal > 0"
+                        class="ml-auto flex min-h-[1.125rem] min-w-[1.125rem] shrink-0 items-center justify-center rounded-full bg-amber-400 px-1 text-[10px] font-bold leading-none text-amber-950"
+                        :class="{ '!bg-white !text-amber-950': item.active }"
+                    >
+                        {{ ordersPendingTotal > 99 ? '99+' : ordersPendingTotal }}
+                    </span>
                     <span
                         v-if="item.route === 'tenant.admin.chat.index' && chatUnreadTotal > 0"
                         class="ml-auto flex min-h-[1.125rem] min-w-[1.125rem] shrink-0 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold leading-none text-brand"

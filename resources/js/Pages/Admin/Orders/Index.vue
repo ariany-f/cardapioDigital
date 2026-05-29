@@ -10,6 +10,7 @@ defineProps({ orders: Object, filters: Object });
 const page = usePage();
 const tenant = page.props.tenant;
 const { can } = usePermissions();
+const { refreshPending } = useAdminOrdersPending();
 
 const statusLabel = (status) => page.props.translations?.[`order.status.${status}`] ?? status;
 
@@ -19,7 +20,9 @@ const filterStatus = (status) => {
 
 const acceptOrder = (order) => {
     if (!confirm(`Aprovar pedido ${order.order_number}?`)) return;
-    router.post(route('tenant.admin.orders.accept', { tenant: tenant.slug, order: order.id }));
+    router.post(route('tenant.admin.orders.accept', { tenant: tenant.slug, order: order.id }), {
+        onSuccess: () => refreshPending(),
+    });
 };
 
 const statusBadgeClass = (status) => {

@@ -148,6 +148,7 @@ Route::prefix('{tenant}')
 
                 Route::middleware('permission:orders.view')->group(function () {
                     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+                    Route::get('/orders/pending-count', [OrderController::class, 'pendingCount'])->name('orders.pending-count');
                     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
                     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
                 });
