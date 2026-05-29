@@ -238,8 +238,7 @@ class TrackOrderController extends Controller
                 'status' => $h->status,
                 'created_at' => $h->created_at?->toIso8601String(),
             ]),
-            'can_report_motoboy' => TenantFeatures::motoboysEnabled(TenantContext::get())
-                && $order->type === 'delivery'
+            'can_report_motoboy' => $order->type === 'delivery'
                 && $order->delivery?->motoboy_id
                 && in_array($order->status, ['out_for_delivery', 'delivered'], true),
             'can_report_order' => ! in_array($order->status, ['rejected'], true),

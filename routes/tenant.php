@@ -64,7 +64,7 @@ Route::prefix('{tenant}')
             ->name('track.rate');
         Route::get('/pedido/{order_number}/status', [TrackOrderController::class, 'status'])->name('track.status');
         Route::post('/pedido/{order_number}/denunciar-entregador', [PublicMotoboyReportController::class, 'store'])
-            ->middleware(['throttle:public-forms', 'motoboys.enabled'])
+            ->middleware('throttle:public-forms')
             ->name('track.report-motoboy');
         Route::post('/pedido/{order_number}/problema-pedido', [TrackOrderController::class, 'reportOrder'])
             ->middleware('throttle:public-forms')

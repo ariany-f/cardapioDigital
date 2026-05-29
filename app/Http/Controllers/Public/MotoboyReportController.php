@@ -8,7 +8,6 @@ use App\Models\Order;
 use App\Services\ActivityLogService;
 use App\Support\GuestOrderAccess;
 use App\Support\TenantContext;
-use App\Support\TenantFeatures;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,10 +16,6 @@ class MotoboyReportController extends Controller
 {
     public function store(Request $request, string $tenant, string $order_number, ActivityLogService $logger): RedirectResponse
     {
-        if (! TenantFeatures::motoboysEnabled(TenantContext::get())) {
-            abort(403);
-        }
-
         $customer = Auth::guard('customer')->user();
 
         $order = Order::withoutGlobalScopes()
