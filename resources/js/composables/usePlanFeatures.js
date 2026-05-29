@@ -10,6 +10,19 @@ export const PLAN_FEATURE_KEYS = [
     'motoboys',
 ];
 
+export const PLAN_BOOLEAN_FEATURE_KEYS = PLAN_FEATURE_KEYS.filter((key) => key !== 'max_branches');
+
+export function defaultPlanFeatures() {
+    return {
+        max_branches: 1,
+        kds: true,
+        pos: false,
+        reports: false,
+        delivery_webhooks: false,
+        motoboys: false,
+    };
+}
+
 export function usePlanFeatures() {
     const page = usePage();
     const plansT = () => page.props.platformTranslations?.plans ?? {};
@@ -48,5 +61,5 @@ export function usePlanFeatures() {
         return [...rows, ...extra];
     };
 
-    return { t, featureLabel, formatFeatureValue, listFeatures };
+    return { t, featureLabel, formatFeatureValue, listFeatures, defaultPlanFeatures };
 }
