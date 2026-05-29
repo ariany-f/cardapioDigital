@@ -573,7 +573,7 @@ const chatEnabled = computed(() => props.chatAvailable);
 
             <div
                 ref="catalogScrollRef"
-                class="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-y-contain lg:pr-1 lg:pt-4"
+                class="scrollbar-thin lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-y-contain lg:pr-1 lg:pt-4"
             >
                 <div v-if="!categories.length" class="rounded-2xl border border-dashed border-stone-300 bg-white p-12 text-center">
                     <p class="font-display text-lg text-stone-600">Cardápio em breve</p>
