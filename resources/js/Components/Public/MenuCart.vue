@@ -14,7 +14,7 @@ import {
 } from '@/composables/useDeliveryAddressLookup';
 import { estimateOrderMinutes, formatEstimateMinutes } from '@/composables/useOrderDeliveryEstimate';
 import { Link, usePage } from '@inertiajs/vue3';
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
     cart: { type: Array, required: true },
@@ -69,6 +69,7 @@ const deliveryDistanceKm = ref(null);
 const deliveryQuoteLoading = ref(false);
 const deliveryQuoteError = ref('');
 let deliveryQuoteTimer = null;
+let deliveryFlowBootstrapped = false;
 const cepLoading = ref(false);
 const cepMessage = ref('');
 const cepError = ref('');
@@ -337,20 +338,7 @@ watch(
             lookupCep(normalizeCep(props.deliveryAddress.postal_code));
         }
     },
-);
-
-watch(
-    () => [
-        props.deliveryAddress.street,
-        props.deliveryAddress.number,
-        props.deliveryAddress.city,
-        props.orderType,
-    ],
-    async () => {
-        if (props.orderType === 'delivery' && needsGeo.value && deliveryLat.value === null) {
-            await syncCoordsForRadius();
-        }
-    },
+    { immediate: true },
 );
 
 function csrfToken() {
@@ -428,11 +416,40 @@ const fetchDeliveryQuote = async () => {
     }
 };
 
-const scheduleDeliveryQuote = () => {
+const runDeliveryQuoteFlow = async () => {
+    if (props.orderType !== 'delivery' || !props.branch.delivery_available) {
+        deliveryFee.value = 0;
+        deliveryDistanceKm.value = null;
+        deliveryQuoteError.value = '';
+        return;
+    }
+
+    if (!canRequestDeliveryQuote()) {
+        deliveryFee.value = 0;
+        deliveryDistanceKm.value = null;
+        deliveryQuoteError.value = '';
+        return;
+    }
+
+    if (needsGeo.value && deliveryLat.value === null) {
+        await syncCoordsForRadius();
+    }
+
+    await fetchDeliveryQuote();
+};
+
+const scheduleDeliveryQuoteFlow = (immediate = false) => {
     if (deliveryQuoteTimer) {
         clearTimeout(deliveryQuoteTimer);
+        deliveryQuoteTimer = null;
     }
-    deliveryQuoteTimer = setTimeout(() => fetchDeliveryQuote(), 500);
+
+    if (immediate) {
+        runDeliveryQuoteFlow();
+        return;
+    }
+
+    deliveryQuoteTimer = setTimeout(() => runDeliveryQuoteFlow(), 500);
 };
 
 watch(
@@ -448,15 +465,27 @@ watch(
         deliveryLng.value,
     ],
     () => {
-        if (props.orderType === 'delivery') {
-            scheduleDeliveryQuote();
-        } else {
+        if (props.orderType !== 'delivery') {
+            deliveryFlowBootstrapped = false;
             deliveryFee.value = 0;
             deliveryDistanceKm.value = null;
             deliveryQuoteError.value = '';
+            return;
         }
+
+        const immediate = !deliveryFlowBootstrapped;
+        deliveryFlowBootstrapped = true;
+        scheduleDeliveryQuoteFlow(immediate);
     },
+    { immediate: true },
 );
+
+onMounted(() => {
+    const a = props.deliveryAddress;
+    if (a.street?.trim() || isValidCep(a.postal_code)) {
+        addressLocked.value = true;
+    }
+});
 
 const showAddressFields = computed(
     () =>
