@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Platform;
 
+use App\Http\Controllers\Concerns\AppliesAdminListSearch;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Platform\Concerns\ManagesTenantCatalog;
 use App\Models\Category;
@@ -13,15 +14,24 @@ use Inertia\Response;
 
 class TenantCategoryController extends Controller
 {
+    use AppliesAdminListSearch;
     use ManagesTenantCatalog;
 
-    public function index(Tenant $tenant): Response
+    public function index(Request $request, Tenant $tenant): Response
     {
         $this->bindTenant($tenant);
 
+        $term = $this->listSearchTerm($request);
+        $query = Category::query()->orderBy('sort_order')->orderBy('name');
+
+        if ($term !== null) {
+            $this->applyListSearch($query, $term, ['name']);
+        }
+
         return Inertia::render('Platform/Tenants/Catalog/Categories', [
             'platformTenant' => $this->tenantPayload($tenant),
-            'categories' => Category::query()->orderBy('sort_order')->orderBy('name')->get(),
+            'categories' => $query->get(),
+            'filters' => $this->listSearchFilters($request),
         ]);
     }
 

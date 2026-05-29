@@ -1,4 +1,5 @@
 <script setup>
+import AdminListSearch from '@/Components/Admin/AdminListSearch.vue';
 import { useCatalogRoutes } from '@/composables/useCatalogRoutes';
 import { usePanelUi } from '@/composables/usePanelUi';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
@@ -6,6 +7,7 @@ import { ref } from 'vue';
 
 const props = defineProps({
     categories: Array,
+    filters: { type: Object, default: () => ({}) },
     mode: { type: String, default: 'tenant' },
     platformTenant: Object,
 });
@@ -63,6 +65,8 @@ const remove = (id) => router.delete(routes.destroy(id));
             Adicionar categoria
         </button>
     </form>
+
+    <AdminListSearch :href="routes.index()" :filters="filters" placeholder="Buscar categoria..." />
 
     <div :class="[cls.tableWrap, 'mt-6']">
         <table :class="cls.table">

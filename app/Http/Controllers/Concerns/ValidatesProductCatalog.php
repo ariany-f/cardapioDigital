@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Concerns;
 
 use App\Support\MediaUrl;
+use Illuminate\Http\Request;
 
 trait ValidatesProductCatalog
 {
+    use AppliesAdminListSearch;
     protected function productFieldsRules(bool $withVariations = false): array
     {
         return [
@@ -48,12 +50,28 @@ trait ValidatesProductCatalog
         ];
     }
 
-    protected function productsListPayload()
+    protected function productsListPayload(?Request $request = null)
     {
-        return \App\Models\Product::query()
-            ->with('category:id,name')
+        $request ??= request();
+        $term = $this->listSearchTerm($request);
+
+        $query = \App\Models\Product::query()->with('category:id,name');
+
+        if ($term !== null) {
+            $this->applyListSearch($query, $term, [
+                'name',
+                'description',
+                fn ($inner, $t, $like) => $inner->orWhereHas(
+                    'category',
+                    fn ($c) => $c->where('name', 'like', $like),
+                ),
+            ]);
+        }
+
+        return $query
             ->orderBy('name')
             ->paginate(20)
+            ->withQueryString()
             ->through(fn ($p) => [
                 ...$p->toArray(),
                 'tags' => implode(', ', $p->tags ?? []),

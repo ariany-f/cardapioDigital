@@ -7,9 +7,10 @@ defineOptions({ layout: PlatformLayout });
 defineProps({
     platformTenant: Object,
     categories: Array,
+    filters: Object,
 });
 </script>
 
 <template>
-    <CategoriesManager mode="platform" :platform-tenant="platformTenant" :categories="categories" />
+    <CategoriesManager mode="platform" :platform-tenant="platformTenant" :categories="categories" :filters="filters" />
 </template>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\AppliesAdminListSearch;
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use App\Models\Branch;
@@ -15,12 +16,25 @@ use Inertia\Response;
 
 class BannerController extends Controller
 {
-    public function index(): Response
+    use AppliesAdminListSearch;
+
+    public function index(Request $request): Response
     {
+        $term = $this->listSearchTerm($request);
+        $query = Banner::query()
+            ->with('branch:id,name')
+            ->orderBy('sort_order');
+
+        if ($term !== null) {
+            $this->applyListSearch($query, $term, [
+                'title',
+                'link_url',
+                fn ($inner, $t, $like) => $inner->orWhereHas('branch', fn ($b) => $b->where('name', 'like', $like)),
+            ]);
+        }
+
         return Inertia::render('Admin/Banners/Index', [
-            'banners' => Banner::query()
-                ->with('branch:id,name')
-                ->orderBy('sort_order')
+            'banners' => $query
                 ->get()
                 ->map(fn ($b) => [
                     'id' => $b->id,
@@ -33,6 +47,7 @@ class BannerController extends Controller
                     'image_url' => MediaUrl::fromPath($b->image_path),
                 ]),
             'branches' => Branch::orderBy('name')->get(['id', 'name']),
+            'filters' => $this->listSearchFilters($request),
         ]);
     }
 

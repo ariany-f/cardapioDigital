@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\AppliesAdminListSearch;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Motoboy;
@@ -18,12 +19,15 @@ use Inertia\Response;
 
 class MotoboyController extends Controller
 {
-    public function index(OrderRatingService $ratings): Response
+    use AppliesAdminListSearch;
+
+    public function index(Request $request, OrderRatingService $ratings): Response
     {
         $tenantId = TenantContext::id();
         $ratingMap = $tenantId ? $ratings->motoboyRatingMap($tenantId) : [];
 
-        $motoboys = Motoboy::query()
+        $term = $this->listSearchTerm($request);
+        $query = Motoboy::query()
             ->with('branches:id,name')
             ->withCount([
                 'deliveries as active_deliveries_count' => fn ($q) => $q->whereIn('status', Motoboy::ACTIVE_DELIVERY_STATUSES),
@@ -31,7 +35,13 @@ class MotoboyController extends Controller
                 'reports as open_reports_count' => fn ($q) => $q->where('status', 'open'),
                 'reports as total_reports_count',
             ])
-            ->orderBy('name')
+            ->orderBy('name');
+
+        if ($term !== null) {
+            $this->applyListSearch($query, $term, ['name', 'phone', 'email', 'cpf']);
+        }
+
+        $motoboys = $query
             ->get()
             ->map(function (Motoboy $m) use ($ratingMap) {
                 $rating = $ratingMap[$m->id] ?? null;
@@ -61,6 +71,7 @@ class MotoboyController extends Controller
                 'printed_only' => $motoboys->where('uses_app', false)->count(),
             ],
             'branches' => Branch::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'filters' => $this->listSearchFilters($request),
             'formOptions' => [
                 'vehicle_types' => $this->labeledOptions(Motoboy::VEHICLE_TYPES, [
                     'motorcycle' => 'Moto',

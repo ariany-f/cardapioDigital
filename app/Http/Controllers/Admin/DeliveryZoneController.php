@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\AppliesAdminListSearch;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\DeliveryZone;
@@ -12,13 +13,22 @@ use Inertia\Response;
 
 class DeliveryZoneController extends Controller
 {
-    public function index(string $tenant, Branch $branch): Response
+    use AppliesAdminListSearch;
+
+    public function index(Request $request, string $tenant, Branch $branch): Response
     {
+        $term = $this->listSearchTerm($request);
+        $query = DeliveryZone::query()
+            ->where('branch_id', $branch->id)
+            ->orderBy('name');
+
+        if ($term !== null) {
+            $this->applyListSearch($query, $term, ['name']);
+        }
+
         return Inertia::render('Admin/DeliveryZones/Index', [
             'branch' => $branch->only('id', 'name', 'slug'),
-            'zones' => DeliveryZone::query()
-                ->where('branch_id', $branch->id)
-                ->orderBy('name')
+            'zones' => $query
                 ->get()
                 ->map(fn ($z) => [
                     'id' => $z->id,
@@ -29,6 +39,7 @@ class DeliveryZoneController extends Controller
                     'min_order_override' => $z->min_order_override,
                     'is_active' => $z->is_active,
                 ]),
+            'filters' => $this->listSearchFilters($request),
         ]);
     }
 

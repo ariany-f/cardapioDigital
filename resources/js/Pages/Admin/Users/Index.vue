@@ -1,4 +1,5 @@
 <script setup>
+import AdminListSearch from '@/Components/Admin/AdminListSearch.vue';
 import RolePermissionPreview from '@/Components/Admin/RolePermissionPreview.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
@@ -96,6 +97,13 @@ const remove = (id) => {
         Gerencie quem acessa o painel. Use <strong>Equipe da filial</strong> para limitar pedidos, KDS e chat a unidades
         específicas.
     </p>
+
+    <AdminListSearch
+        :href="route('tenant.admin.users.index', { tenant: tenant.slug })"
+        :filters="filters"
+        placeholder="Buscar usuário..."
+        wrapper-class="mt-6"
+    />
 
     <div class="mt-8 grid gap-8 lg:grid-cols-2">
         <div class="admin-card">

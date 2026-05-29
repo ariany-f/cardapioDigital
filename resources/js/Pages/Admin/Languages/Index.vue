@@ -1,4 +1,5 @@
 <script setup>
+import AdminListSearch from '@/Components/Admin/AdminListSearch.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 
@@ -48,6 +49,12 @@ const importTranslations = () =>
             </form>
         </div>
     </div>
+    <AdminListSearch
+        :href="route('tenant.admin.languages.index', { tenant: tenant.slug })"
+        :filters="filters"
+        placeholder="Buscar idioma..."
+    />
+
     <ul class="mt-6 space-y-2">
         <li v-for="lang in languages" :key="lang.id" class="admin-card flex items-center gap-2 py-3">
             <span>{{ lang.flag }}</span>

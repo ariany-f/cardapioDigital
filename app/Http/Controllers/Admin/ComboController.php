@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\AppliesAdminListSearch;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Combo;
@@ -16,12 +17,26 @@ use Inertia\Response;
 
 class ComboController extends Controller
 {
-    public function index(): Response
+    use AppliesAdminListSearch;
+
+    public function index(Request $request): Response
     {
+        $term = $this->listSearchTerm($request);
+        $query = Combo::query()
+            ->with(['branch:id,name', 'items.product:id,name'])
+            ->orderBy('name');
+
+        if ($term !== null) {
+            $this->applyListSearch($query, $term, [
+                'name',
+                'description',
+                fn ($inner, $t, $like) => $inner->orWhereHas('branch', fn ($b) => $b->where('name', 'like', $like)),
+                fn ($inner, $t, $like) => $inner->orWhereHas('items.product', fn ($p) => $p->where('name', 'like', $like)),
+            ]);
+        }
+
         return Inertia::render('Admin/Combos/Index', [
-            'combos' => Combo::query()
-                ->with(['branch:id,name', 'items.product:id,name'])
-                ->orderBy('name')
+            'combos' => $query
                 ->get()
                 ->map(fn ($c) => [
                     'id' => $c->id,
@@ -40,6 +55,7 @@ class ComboController extends Controller
                 ]),
             'branches' => Branch::orderBy('name')->get(['id', 'name']),
             'products' => Product::orderBy('name')->get(['id', 'name']),
+            'filters' => $this->listSearchFilters($request),
         ]);
     }
 

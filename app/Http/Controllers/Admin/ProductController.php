@@ -22,18 +22,19 @@ class ProductController extends Controller
     use ManagesProductVariations;
     use ValidatesProductCatalog;
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
         return Inertia::render('Admin/Products/Index', [
-            'products' => $this->productsListPayload(),
+            'products' => $this->productsListPayload($request),
             'categories' => Category::orderBy('name')->get(['id', 'name']),
             'branches' => Branch::orderBy('name')->get(['id', 'name']),
+            'filters' => $this->listSearchFilters($request),
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return $this->productsPage(['creating' => true]);
+        return $this->productsPage($request, ['creating' => true]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -51,9 +52,9 @@ class ProductController extends Controller
             ->with('success', 'Produto criado.');
     }
 
-    public function edit(string $tenant, Product $product): Response
+    public function edit(Request $request, string $tenant, Product $product): Response
     {
-        return $this->productsPage([
+        return $this->productsPage($request, [
             'editingProduct' => $this->productWithVariations($product),
         ]);
     }
@@ -73,12 +74,13 @@ class ProductController extends Controller
             ->with('success', 'Produto atualizado.');
     }
 
-    protected function productsPage(array $extra = []): Response
+    protected function productsPage(Request $request, array $extra = []): Response
     {
         return Inertia::render('Admin/Products/Index', [
-            'products' => $this->productsListPayload(),
+            'products' => $this->productsListPayload($request),
             'categories' => Category::orderBy('name')->get(['id', 'name']),
             'branches' => Branch::orderBy('name')->get(['id', 'name']),
+            'filters' => $this->listSearchFilters($request),
             ...$extra,
         ]);
     }

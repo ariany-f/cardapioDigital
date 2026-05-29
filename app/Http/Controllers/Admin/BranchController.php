@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\AppliesAdminListSearch;
 use App\Http\Controllers\Concerns\HandlesBranchCoverUpload;
 use App\Http\Controllers\Concerns\ValidatesBranch;
 use App\Http\Controllers\Controller;
@@ -96,11 +97,19 @@ class BranchController extends Controller
     {
         $tenantSlug = request()->route('tenant');
 
+        $request = request();
+        $term = $this->listSearchTerm($request);
+        $query = Branch::query()->orderBy('name');
+
+        if ($term !== null) {
+            $this->applyListSearch($query, $term, ['name', 'slug', 'city', 'neighborhood', 'phone']);
+        }
+
         return Inertia::render('Admin/Branches/Index', [
-            'branches' => Branch::query()
-                ->orderBy('name')
+            'branches' => $query
                 ->get()
                 ->map(fn (Branch $branch) => $this->branchPayload($branch, $tenantSlug)),
+            'filters' => $this->listSearchFilters($request),
             ...$extra,
         ]);
     }

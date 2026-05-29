@@ -1,4 +1,5 @@
 <script setup>
+import AdminListSearch from '@/Components/Admin/AdminListSearch.vue';
 import BranchFormFields from '@/Components/Platform/BranchFormFields.vue';
 import PlatformLayout from '@/Layouts/PlatformLayout.vue';
 import { branchFormFromModel, emptyBranchForm } from '@/composables/platformForms';
@@ -12,6 +13,7 @@ const props = defineProps({
     branches: Array,
     editingBranch: Object,
     creating: Boolean,
+    filters: Object,
 });
 
 const form = useForm(emptyBranchForm());
@@ -132,6 +134,13 @@ const formatRestaurantRating = (summary) => {
         </div>
     </form>
 
+    <AdminListSearch
+        v-if="!creating && !editingBranch"
+        :href="route('platform.tenants.branches.index', tenant.id)"
+        :filters="filters"
+        placeholder="Buscar filial..."
+    />
+
     <ul v-if="!creating && !editingBranch" class="mt-6 space-y-3">
         <li v-for="branch in branches" :key="branch.id" class="platform-card">
             <div class="flex flex-wrap items-start justify-between gap-2">
@@ -172,7 +181,7 @@ const formatRestaurantRating = (summary) => {
             </div>
         </li>
         <li v-if="!branches.length" class="platform-card text-center text-sm text-slate-500">
-            Nenhuma filial cadastrada.
+            {{ filters?.q ? 'Nenhuma filial encontrada.' : 'Nenhuma filial cadastrada.' }}
         </li>
     </ul>
 </template>

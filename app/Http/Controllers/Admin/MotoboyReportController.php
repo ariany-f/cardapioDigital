@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\AppliesAdminListSearch;
 use App\Http\Controllers\Controller;
 use App\Models\Motoboy;
 use App\Models\MotoboyReport;
@@ -13,12 +14,26 @@ use Inertia\Response;
 
 class MotoboyReportController extends Controller
 {
-    public function index(): Response
+    use AppliesAdminListSearch;
+
+    public function index(Request $request): Response
     {
+        $term = $this->listSearchTerm($request);
+        $query = MotoboyReport::query()
+            ->with(['motoboy:id,name,phone', 'customer:id,name,email,phone', 'order:id,order_number'])
+            ->latest();
+
+        if ($term !== null) {
+            $this->applyListSearch($query, $term, [
+                'message',
+                fn ($inner, $t, $like) => $inner->orWhereHas('motoboy', fn ($m) => $m->where('name', 'like', $like)),
+                fn ($inner, $t, $like) => $inner->orWhereHas('customer', fn ($c) => $c->where('name', 'like', $like)->orWhere('email', 'like', $like)),
+                fn ($inner, $t, $like) => $inner->orWhereHas('order', fn ($o) => $o->where('order_number', 'like', $like)),
+            ]);
+        }
+
         return Inertia::render('Admin/MotoboyReports/Index', [
-            'reports' => MotoboyReport::query()
-                ->with(['motoboy:id,name,phone', 'customer:id,name,email,phone', 'order:id,order_number'])
-                ->latest()
+            'reports' => $query
                 ->limit(100)
                 ->get()
                 ->map(fn (MotoboyReport $r) => [
@@ -31,6 +46,7 @@ class MotoboyReportController extends Controller
                     'customer' => $r->customer?->only(['name', 'email', 'phone']),
                     'order' => $r->order?->only(['order_number']),
                 ]),
+            'filters' => $this->listSearchFilters($request),
         ]);
     }
 

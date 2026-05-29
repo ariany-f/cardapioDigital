@@ -1,11 +1,12 @@
 <script setup>
+import AdminListSearch from '@/Components/Admin/AdminListSearch.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 defineOptions({ layout: AdminLayout });
 
-const props = defineProps({ branch: Object, zones: Array });
+const props = defineProps({ branch: Object, zones: Array, filters: Object });
 
 const page = usePage();
 const tenant = page.props.tenant;
@@ -79,6 +80,12 @@ const remove = (id) =>
         />
         <button type="submit" class="admin-btn-primary sm:col-span-2">Adicionar zona</button>
     </form>
+
+    <AdminListSearch
+        :href="route('tenant.admin.branches.zones', { tenant: tenant.slug, branch: branch.id })"
+        :filters="filters"
+        placeholder="Buscar zona..."
+    />
 
     <ul class="mt-6 space-y-3">
         <li v-for="z in zones" :key="z.id" class="admin-card">

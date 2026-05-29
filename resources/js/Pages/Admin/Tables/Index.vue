@@ -1,4 +1,5 @@
 <script setup>
+import AdminListSearch from '@/Components/Admin/AdminListSearch.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 
@@ -7,6 +8,7 @@ defineOptions({ layout: AdminLayout });
 defineProps({
     tables: Array,
     branches: Array,
+    filters: Object,
 });
 
 const page = usePage();
@@ -53,6 +55,12 @@ const copy = (url) => navigator.clipboard.writeText(url);
             Adicionar mesa
         </button>
     </form>
+
+    <AdminListSearch
+        :href="route('tenant.admin.tables.index', { tenant: tenant.slug })"
+        :filters="filters"
+        placeholder="Buscar mesa..."
+    />
 
     <div class="admin-table-wrap mt-6">
         <table class="admin-table">

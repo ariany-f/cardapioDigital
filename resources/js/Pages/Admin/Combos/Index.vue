@@ -1,4 +1,5 @@
 <script setup>
+import AdminListSearch from '@/Components/Admin/AdminListSearch.vue';
 import ComboFormFields from '@/Components/Admin/ComboFormFields.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
@@ -6,7 +7,7 @@ import { ref } from 'vue';
 
 defineOptions({ layout: AdminLayout });
 
-const props = defineProps({ combos: Array, branches: Array, products: Array });
+const props = defineProps({ combos: Array, branches: Array, products: Array, filters: Object });
 
 const page = usePage();
 const tenant = page.props.tenant;
@@ -81,6 +82,12 @@ const remove = (id) => router.delete(route('tenant.admin.combos.destroy', { tena
             <button type="submit" class="admin-btn-primary" :disabled="form.processing">Criar combo</button>
         </div>
     </form>
+
+    <AdminListSearch
+        :href="route('tenant.admin.combos.index', { tenant: tenant.slug })"
+        :filters="filters"
+        placeholder="Buscar combo..."
+    />
 
     <ul class="mt-6 space-y-3">
         <li v-for="c in combos" :key="c.id" class="admin-card">

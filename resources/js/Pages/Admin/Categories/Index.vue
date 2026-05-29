@@ -6,9 +6,10 @@ defineOptions({ layout: AdminLayout });
 
 defineProps({
     categories: Array,
+    filters: Object,
 });
 </script>
 
 <template>
-    <CategoriesManager mode="tenant" :categories="categories" />
+    <CategoriesManager mode="tenant" :categories="categories" :filters="filters" />
 </template>

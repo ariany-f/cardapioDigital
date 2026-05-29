@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\AppliesAdminListSearch;
 use App\Http\Controllers\Controller;
 use App\Models\Language;
 use Illuminate\Http\Request;
@@ -12,10 +13,20 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LanguageController extends Controller
 {
-    public function index(): Response
+    use AppliesAdminListSearch;
+
+    public function index(Request $request): Response
     {
+        $term = $this->listSearchTerm($request);
+        $query = Language::query()->orderBy('name');
+
+        if ($term !== null) {
+            $this->applyListSearch($query, $term, ['name', 'code']);
+        }
+
         return Inertia::render('Admin/Languages/Index', [
-            'languages' => Language::orderBy('name')->get(),
+            'languages' => $query->get(),
+            'filters' => $this->listSearchFilters($request),
         ]);
     }
 

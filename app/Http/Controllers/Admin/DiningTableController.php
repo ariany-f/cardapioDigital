@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\AppliesAdminListSearch;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\DiningTable;
@@ -14,14 +15,26 @@ use Inertia\Response;
 
 class DiningTableController extends Controller
 {
-    public function index(): Response
-    {
-        $tenantSlug = request()->route('tenant');
+    use AppliesAdminListSearch;
 
-        $tables = DiningTable::query()
+    public function index(Request $request): Response
+    {
+        $tenantSlug = $request->route('tenant');
+        $term = $this->listSearchTerm($request);
+
+        $query = DiningTable::query()
             ->with('branch:id,name,slug')
             ->orderBy('branch_id')
-            ->orderBy('name')
+            ->orderBy('name');
+
+        if ($term !== null) {
+            $this->applyListSearch($query, $term, [
+                'name',
+                fn ($inner, $t, $like) => $inner->orWhereHas('branch', fn ($b) => $b->where('name', 'like', $like)),
+            ]);
+        }
+
+        $tables = $query
             ->get()
             ->map(fn (DiningTable $table) => [
                 'id' => $table->id,
@@ -36,6 +49,7 @@ class DiningTableController extends Controller
         return Inertia::render('Admin/Tables/Index', [
             'tables' => $tables,
             'branches' => Branch::orderBy('name')->get(['id', 'name', 'slug']),
+            'filters' => $this->listSearchFilters($request),
         ]);
     }
 

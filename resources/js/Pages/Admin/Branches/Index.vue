@@ -1,4 +1,5 @@
 <script setup>
+import AdminListSearch from '@/Components/Admin/AdminListSearch.vue';
 import BranchFormFields from '@/Components/Platform/BranchFormFields.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { branchFormFromModel, emptyBranchForm } from '@/composables/platformForms';
@@ -90,6 +91,13 @@ const remove = (id) => router.delete(route('tenant.admin.branches.destroy', { te
             <button type="submit" class="admin-btn-primary" :disabled="editForm.processing">Atualizar</button>
         </div>
     </form>
+
+    <AdminListSearch
+        v-if="!creating && !editingBranch"
+        :href="route('tenant.admin.branches.index', { tenant: tenant.slug })"
+        :filters="filters"
+        placeholder="Buscar filial..."
+    />
 
     <ul class="mt-6 space-y-3">
         <li v-for="branch in branches" :key="branch.id" class="admin-card">

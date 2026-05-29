@@ -1,11 +1,12 @@
 <script setup>
+import AdminListSearch from '@/Components/Admin/AdminListSearch.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 defineOptions({ layout: AdminLayout });
 
-defineProps({ reports: Array });
+defineProps({ reports: Array, filters: Object });
 
 const page = usePage();
 const tenant = page.props.tenant;
@@ -37,6 +38,12 @@ const submit = (id) =>
     <Head title="Denúncias de entregadores" />
     <h1 class="admin-page-title">Denúncias de entregadores</h1>
     <p class="mt-1 text-sm text-stone-500">Relatos de clientes sobre entregadores.</p>
+
+    <AdminListSearch
+        :href="route('tenant.admin.motoboy-reports.index', { tenant: tenant.slug })"
+        :filters="filters"
+        placeholder="Buscar denúncia..."
+    />
 
     <ul class="mt-6 space-y-4">
         <li v-for="r in reports" :key="r.id" class="admin-card">

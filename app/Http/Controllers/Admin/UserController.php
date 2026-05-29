@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\AppliesAdminListSearch;
 use App\Http\Controllers\Concerns\LogsCrudActivity;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
@@ -20,16 +21,24 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    use AppliesAdminListSearch;
     use LogsCrudActivity;
-    public function index(): Response
+
+    public function index(Request $request): Response
     {
         $tenant = TenantContext::get();
+        $term = $this->listSearchTerm($request);
+        $query = User::query()
+            ->where('is_platform_user', false)
+            ->with('branches:id,name')
+            ->orderBy('name');
+
+        if ($term !== null) {
+            $this->applyListSearch($query, $term, ['name', 'email', 'phone']);
+        }
 
         return Inertia::render('Admin/Users/Index', [
-            'users' => User::query()
-                ->where('is_platform_user', false)
-                ->with('branches:id,name')
-                ->orderBy('name')
+            'users' => $query
                 ->get()
                 ->map(fn (User $user) => [
                     'id' => $user->id,
@@ -48,6 +57,7 @@ class UserController extends Controller
                 ->pluck('name'),
             'branches' => Branch::query()->orderBy('name')->get(['id', 'name']),
             'rolePermissions' => RolePermissionsCatalog::allForTenantRoles(),
+            'filters' => $this->listSearchFilters($request),
         ]);
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\AppliesAdminListSearch;
 use App\Http\Controllers\Controller;
 use App\Models\SupportRequest;
 use App\Services\ActivityLogService;
@@ -13,21 +14,36 @@ use Inertia\Response;
 
 class SupportRequestController extends Controller
 {
-    public function index(ActivityLogService $logger): Response
+    use AppliesAdminListSearch;
+
+    public function index(Request $request, ActivityLogService $logger): Response
     {
+        $term = $this->listSearchTerm($request);
+        $query = SupportRequest::query()
+            ->with([
+                'customer:id,name,email,phone',
+                'order:id,order_number',
+                'lastRespondedByUser:id,name',
+                'closedByUser:id,name',
+                'activityLogs' => fn ($q) => $q->with(['actorUser:id,name'])->limit(15),
+            ])
+            ->latest();
+
+        if ($term !== null) {
+            $this->applyListSearch($query, $term, [
+                'message',
+                'admin_notes',
+                fn ($inner, $t, $like) => $inner->orWhereHas('customer', fn ($c) => $c->where('name', 'like', $like)->orWhere('email', 'like', $like)),
+                fn ($inner, $t, $like) => $inner->orWhereHas('order', fn ($o) => $o->where('order_number', 'like', $like)),
+            ]);
+        }
+
         return Inertia::render('Admin/Support/Index', [
-            'requests' => SupportRequest::query()
-                ->with([
-                    'customer:id,name,email,phone',
-                    'order:id,order_number',
-                    'lastRespondedByUser:id,name',
-                    'closedByUser:id,name',
-                    'activityLogs' => fn ($q) => $q->with(['actorUser:id,name'])->limit(15),
-                ])
-                ->latest()
+            'requests' => $query
                 ->limit(50)
                 ->get()
                 ->map(fn (SupportRequest $r) => $this->formatRequest($r, $logger)),
+            'filters' => $this->listSearchFilters($request),
         ]);
     }
 

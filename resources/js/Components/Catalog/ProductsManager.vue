@@ -1,4 +1,5 @@
 <script setup>
+import AdminListSearch from '@/Components/Admin/AdminListSearch.vue';
 import VariationGroupsEditor from '@/Components/Admin/VariationGroupsEditor.vue';
 import { useCatalogRoutes } from '@/composables/useCatalogRoutes';
 import { usePanelUi } from '@/composables/usePanelUi';
@@ -11,6 +12,7 @@ const props = defineProps({
     branches: Array,
     editingProduct: Object,
     creating: Boolean,
+    filters: { type: Object, default: () => ({}) },
     mode: { type: String, default: 'tenant' },
     platformTenant: Object,
 });
@@ -249,6 +251,13 @@ const remove = (id) => router.delete(routes.destroy(id));
         </div>
     </form>
 
+    <AdminListSearch
+        v-if="!creating && !editingProduct"
+        :href="routes.index()"
+        :filters="filters"
+        placeholder="Buscar produto..."
+    />
+
     <div v-if="!creating && !editingProduct" :class="[cls.tableWrap, 'mt-6']">
         <table :class="cls.table">
             <thead>
@@ -304,6 +313,8 @@ const remove = (id) => router.delete(routes.destroy(id));
                 </tr>
             </tbody>
         </table>
-        <p v-if="!products.data?.length" class="px-4 py-8 text-center text-stone-500">Nenhum produto cadastrado.</p>
+        <p v-if="!products.data?.length" class="px-4 py-8 text-center text-stone-500">
+            {{ filters?.q ? 'Nenhum produto encontrado.' : 'Nenhum produto cadastrado.' }}
+        </p>
     </div>
 </template>

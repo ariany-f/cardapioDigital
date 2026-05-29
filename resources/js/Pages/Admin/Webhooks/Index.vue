@@ -1,4 +1,5 @@
 <script setup>
+import AdminListSearch from '@/Components/Admin/AdminListSearch.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -49,6 +50,12 @@ const remove = (id) => {
         <input v-model="form.name" class="admin-input" placeholder="Nome (ex: ERP parceiro)" required />
         <button type="submit" class="admin-btn-primary" :disabled="form.processing">Gerar token</button>
     </form>
+
+    <AdminListSearch
+        :href="route('tenant.admin.webhooks.index', { tenant: tenant.slug })"
+        :filters="filters"
+        placeholder="Buscar token..."
+    />
 
     <ul class="mt-6 space-y-3">
         <li v-for="t in tokens" :key="t.id" class="admin-card">

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\AppliesAdminListSearch;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\RedirectResponse;
@@ -11,10 +12,20 @@ use Inertia\Response;
 
 class CategoryController extends Controller
 {
-    public function index(): Response
+    use AppliesAdminListSearch;
+
+    public function index(Request $request): Response
     {
+        $term = $this->listSearchTerm($request);
+        $query = Category::query()->orderBy('sort_order')->orderBy('name');
+
+        if ($term !== null) {
+            $this->applyListSearch($query, $term, ['name']);
+        }
+
         return Inertia::render('Admin/Categories/Index', [
-            'categories' => Category::query()->orderBy('sort_order')->orderBy('name')->get(),
+            'categories' => $query->get(),
+            'filters' => $this->listSearchFilters($request),
         ]);
     }
 

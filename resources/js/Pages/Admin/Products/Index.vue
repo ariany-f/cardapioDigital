@@ -10,6 +10,7 @@ defineProps({
     branches: Array,
     editingProduct: Object,
     creating: Boolean,
+    filters: Object,
 });
 </script>
 
@@ -21,5 +22,6 @@ defineProps({
         :branches="branches"
         :editing-product="editingProduct"
         :creating="creating"
+        :filters="filters"
     />
 </template>

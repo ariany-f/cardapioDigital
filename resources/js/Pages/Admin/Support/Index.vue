@@ -1,4 +1,5 @@
 <script setup>
+import AdminListSearch from '@/Components/Admin/AdminListSearch.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
@@ -6,7 +7,7 @@ import { ref } from 'vue';
 
 defineOptions({ layout: AdminLayout });
 
-defineProps({ requests: Array });
+defineProps({ requests: Array, filters: Object });
 
 const page = usePage();
 const tenant = page.props.tenant;
@@ -50,6 +51,12 @@ const hasContact = (contact) => contact?.name || contact?.phone || contact?.emai
     <p class="mt-3 text-sm text-stone-500">
         Mensagens encaminhadas pelo cardápio. Responda pelo telefone, WhatsApp ou outro canal do seu estabelecimento.
     </p>
+
+    <AdminListSearch
+        :href="route('tenant.admin.requests.index', { tenant: tenant.slug })"
+        :filters="filters"
+        placeholder="Buscar solicitação..."
+    />
 
     <ul v-if="requests?.length" class="mt-6 space-y-3">
         <li v-for="r in requests" :key="r.id" class="admin-card">

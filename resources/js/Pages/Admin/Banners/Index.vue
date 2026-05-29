@@ -1,4 +1,5 @@
 <script setup>
+import AdminListSearch from '@/Components/Admin/AdminListSearch.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -69,6 +70,12 @@ const remove = (id) => router.delete(route('tenant.admin.banners.destroy', { ten
         <input type="file" accept="image/*" class="admin-input sm:col-span-2" required @change="form.image = $event.target.files[0]" />
         <button type="submit" class="admin-btn-primary sm:col-span-2">Publicar banner</button>
     </form>
+
+    <AdminListSearch
+        :href="route('tenant.admin.banners.index', { tenant: tenant.slug })"
+        :filters="filters"
+        placeholder="Buscar banner..."
+    />
 
     <div class="mt-6 grid gap-4 sm:grid-cols-2">
         <div v-for="b in banners" :key="b.id" class="admin-card">

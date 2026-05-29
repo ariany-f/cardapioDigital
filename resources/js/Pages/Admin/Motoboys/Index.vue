@@ -1,4 +1,5 @@
 <script setup>
+import AdminListSearch from '@/Components/Admin/AdminListSearch.vue';
 import DeliveryNotice from '@/Components/Platform/DeliveryNotice.vue';
 import MotoboyFormFields from '@/Components/Admin/MotoboyFormFields.vue';
 import MotoboyLoginManage from '@/Components/Admin/MotoboyLoginManage.vue';
@@ -264,6 +265,13 @@ const reportsLabel = (m) => {
             </div>
         </dl>
     </div>
+
+    <AdminListSearch
+        :href="route('tenant.admin.motoboys.index', { tenant: tenant.slug })"
+        :filters="filters"
+        placeholder="Buscar entregador..."
+        wrapper-class="mt-4"
+    />
 
     <!-- Filtros -->
     <div class="mt-4 flex flex-wrap gap-2">

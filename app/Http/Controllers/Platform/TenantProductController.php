@@ -22,18 +22,18 @@ class TenantProductController extends Controller
     use ManagesTenantCatalog;
     use ValidatesProductCatalog;
 
-    public function index(Tenant $tenant): Response
+    public function index(Request $request, Tenant $tenant): Response
     {
         $this->bindTenant($tenant);
 
-        return $this->productsPage($tenant);
+        return $this->productsPage($request, $tenant);
     }
 
-    public function create(Tenant $tenant): Response
+    public function create(Request $request, Tenant $tenant): Response
     {
         $this->bindTenant($tenant);
 
-        return $this->productsPage($tenant, ['creating' => true]);
+        return $this->productsPage($request, $tenant, ['creating' => true]);
     }
 
     public function store(Request $request, Tenant $tenant): RedirectResponse
@@ -53,12 +53,12 @@ class TenantProductController extends Controller
             ->with('success', 'Produto criado.');
     }
 
-    public function edit(Tenant $tenant, Product $product): Response
+    public function edit(Request $request, Tenant $tenant, Product $product): Response
     {
         $this->bindTenant($tenant);
         $product = $this->findProduct($tenant, $product->id);
 
-        return $this->productsPage($tenant, [
+        return $this->productsPage($request, $tenant, [
             'editingProduct' => $this->productWithVariations($product),
         ]);
     }
@@ -91,13 +91,14 @@ class TenantProductController extends Controller
             ->with('success', 'Produto removido.');
     }
 
-    protected function productsPage(Tenant $tenant, array $extra = []): Response
+    protected function productsPage(Request $request, Tenant $tenant, array $extra = []): Response
     {
         return Inertia::render('Platform/Tenants/Catalog/Products', [
             'platformTenant' => $this->tenantPayload($tenant),
-            'products' => $this->productsListPayload(),
+            'products' => $this->productsListPayload($request),
             'categories' => Category::orderBy('name')->get(['id', 'name']),
             'branches' => $this->branchesFor($tenant),
+            'filters' => $this->listSearchFilters($request),
             ...$extra,
         ]);
     }

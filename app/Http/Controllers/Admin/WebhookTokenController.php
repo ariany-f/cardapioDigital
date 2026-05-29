@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\AppliesAdminListSearch;
 use App\Http\Controllers\Controller;
 use App\Models\TenantWebhookToken;
 use App\Support\TenantContext;
@@ -13,16 +14,25 @@ use Inertia\Response;
 
 class WebhookTokenController extends Controller
 {
-    public function index(): Response
+    use AppliesAdminListSearch;
+
+    public function index(Request $request): Response
     {
         $tenant = TenantContext::get();
+        $term = $this->listSearchTerm($request);
+
+        $query = TenantWebhookToken::query()
+            ->where('tenant_id', $tenant->id)
+            ->orderByDesc('created_at');
+
+        if ($term !== null) {
+            $this->applyListSearch($query, $term, ['name', 'type']);
+        }
 
         return Inertia::render('Admin/Webhooks/Index', [
-            'tokens' => TenantWebhookToken::query()
-                ->where('tenant_id', $tenant->id)
-                ->orderByDesc('created_at')
-                ->get(['id', 'name', 'type', 'is_active', 'created_at', 'token']),
+            'tokens' => $query->get(['id', 'name', 'type', 'is_active', 'created_at', 'token']),
             'webhookUrl' => url('/api/webhooks/delivery'),
+            'filters' => $this->listSearchFilters($request),
         ]);
     }
 

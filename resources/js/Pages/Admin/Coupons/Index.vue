@@ -1,4 +1,5 @@
 <script setup>
+import AdminListSearch from '@/Components/Admin/AdminListSearch.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -75,6 +76,12 @@ const remove = (id) => router.delete(route('tenant.admin.coupons.destroy', { ten
         <input v-model="form.max_uses" type="number" min="1" placeholder="Máx. usos (opcional)" class="admin-input" />
         <button type="submit" class="admin-btn-primary sm:col-span-2 lg:col-span-3">Criar cupom</button>
     </form>
+
+    <AdminListSearch
+        :href="route('tenant.admin.coupons.index', { tenant: tenant.slug })"
+        :filters="filters"
+        placeholder="Buscar cupom..."
+    />
 
     <div class="admin-table-wrap mt-6">
         <table class="admin-table">

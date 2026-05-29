@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Platform;
 
+use App\Http\Controllers\Concerns\AppliesAdminListSearch;
 use App\Http\Controllers\Concerns\HandlesBranchCoverUpload;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\ValidatesBranch;
@@ -17,6 +18,7 @@ use Inertia\Response;
 
 class TenantBranchController extends Controller
 {
+    use AppliesAdminListSearch;
     use HandlesBranchCoverUpload;
     use ValidatesBranch;
 
@@ -102,10 +104,18 @@ class TenantBranchController extends Controller
 
     protected function branchesPage(Tenant $tenant, array $extra = []): Response
     {
-        $branchModels = Branch::withoutGlobalScopes()
+        $request = request();
+        $term = $this->listSearchTerm($request);
+
+        $query = Branch::withoutGlobalScopes()
             ->where('tenant_id', $tenant->id)
-            ->orderBy('name')
-            ->get();
+            ->orderBy('name');
+
+        if ($term !== null) {
+            $this->applyListSearch($query, $term, ['name', 'slug', 'city', 'neighborhood', 'phone']);
+        }
+
+        $branchModels = $query->get();
 
         $averages = $this->ratings->branchAveragesForMany(
             $tenant->id,
@@ -126,6 +136,7 @@ class TenantBranchController extends Controller
                 'rating_summary' => $this->ratings->tenantAverages($tenant->id),
             ],
             'branches' => $branches,
+            'filters' => $this->listSearchFilters($request),
             ...$extra,
         ]);
     }
