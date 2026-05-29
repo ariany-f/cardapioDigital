@@ -11,6 +11,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Support\TenantFeatures;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
@@ -38,7 +39,12 @@ class OrderShowDeliveryHistoryTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->admin = User::factory()->create(['tenant_id' => $this->tenant->id]);
+        $this->admin = User::create([
+            'name' => 'Admin',
+            'email' => 'admin@loja.test',
+            'password' => Hash::make('password'),
+            'tenant_id' => $this->tenant->id,
+        ]);
         $this->admin->givePermissionTo('orders.view');
     }
 
