@@ -77,6 +77,7 @@ const filterByTenant = (tenantId) => {
                     <th>Valor</th>
                     <th>Referência</th>
                     <th>Registrado por</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -95,6 +96,14 @@ const filterByTenant = (tenantId) => {
                     <td class="font-semibold text-green-700">{{ formatMoney(p.amount) }}</td>
                     <td class="text-slate-600">{{ p.reference || '—' }}</td>
                     <td class="text-slate-600">{{ p.marked_by?.name ?? '—' }}</td>
+                    <td class="text-right whitespace-nowrap">
+                        <Link
+                            :href="route('platform.payments.edit', p.id)"
+                            class="text-sm font-medium text-indigo-600 hover:underline"
+                        >
+                            Editar
+                        </Link>
+                    </td>
                 </tr>
             </tbody>
         </table>

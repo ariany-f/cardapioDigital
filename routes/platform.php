@@ -69,6 +69,8 @@ Route::prefix('platform')->name('platform.')->group(function () {
         Route::get('payments', [TenantPaymentController::class, 'index'])->name('payments.index');
         Route::get('payments/create', [TenantPaymentController::class, 'create'])->name('payments.create');
         Route::post('payments', [TenantPaymentController::class, 'store'])->name('payments.store');
+        Route::get('payments/{payment}/edit', [TenantPaymentController::class, 'edit'])->name('payments.edit');
+        Route::put('payments/{payment}', [TenantPaymentController::class, 'update'])->name('payments.update');
         Route::post('tenants/{tenant}/suspend', [TenantController::class, 'suspend'])
             ->name('tenants.suspend');
         Route::post('tenants/{tenant}/activate', [TenantController::class, 'activate'])

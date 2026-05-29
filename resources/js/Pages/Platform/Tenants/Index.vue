@@ -1,4 +1,5 @@
 <script setup>
+import Dropdown from '@/Components/Dropdown.vue';
 import GoogleMapEmbed from '@/Components/Maps/GoogleMapEmbed.vue';
 import TenantFormFields from '@/Components/Platform/TenantFormFields.vue';
 import PlatformLayout from '@/Layouts/PlatformLayout.vue';
@@ -48,6 +49,20 @@ const submitCreate = () => createForm.post(route('platform.tenants.store'));
 const submitEdit = () => editForm.put(route('platform.tenants.update', props.editingTenant.id));
 const submitSuspend = () => suspendForm.post(route('platform.tenants.suspend', props.selectedTenant.id));
 const activate = (id) => router.post(route('platform.tenants.activate', id));
+
+const confirmSuspend = () => {
+    if (!confirm('Suspender este restaurante? O cardápio público deixará de aceitar pedidos.')) {
+        return;
+    }
+    submitSuspend();
+};
+
+const confirmActivate = () => {
+    if (!confirm('Reativar este restaurante?')) {
+        return;
+    }
+    activate(props.selectedTenant.id);
+};
 
 const statusLabel = (status) => (status === 'active' ? 'Ativo' : 'Suspenso');
 
@@ -270,14 +285,6 @@ const formatRestaurantRating = (summary) => {
                 <Link :href="route('platform.tenants.seo.edit', selectedTenant.id)" class="text-indigo-600 hover:underline">
                     SEO
                 </Link>
-            </div>
-            <div class="mt-4 flex gap-2">
-                <button v-if="selectedTenant.status === 'active'" type="button" class="rounded bg-red-600 px-3 py-1 text-sm text-white" @click="submitSuspend">
-                    Suspender
-                </button>
-                <button v-else type="button" class="rounded bg-green-600 px-3 py-1 text-sm text-white" @click="activate(selectedTenant.id)">
-                    Reativar
-                </button>
             </div>
         </div>
         <div class="platform-card">
