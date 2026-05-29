@@ -63,6 +63,18 @@ const confirmActivate = () => {
     activate(props.selectedTenant.id);
 };
 
+const confirmDelete = (tenant) => {
+    const name = tenant?.name ?? 'este restaurante';
+    if (
+        !confirm(
+            `Excluir permanentemente "${name}"?\n\nTodos os dados (filiais, produtos, pedidos e usuários do restaurante) serão apagados. Esta ação não pode ser desfeita.`,
+        )
+    ) {
+        return;
+    }
+    router.delete(route('platform.tenants.destroy', tenant.id));
+};
+
 const statusLabel = (status) => (status === 'active' ? 'Ativo' : 'Suspenso');
 
 const featureEnabled = (tenant, key) => (tenant?.settings_json?.[key] ?? true) !== false;
@@ -187,6 +199,13 @@ const formatRestaurantRating = (summary) => {
                         </Link>
                         <Link :href="route('platform.tenants.show', t.id)" class="ml-2 text-indigo-600 hover:underline">Ver</Link>
                         <Link :href="route('platform.tenants.edit', t.id)" class="ml-2 text-slate-600 hover:underline">Editar</Link>
+                        <button
+                            type="button"
+                            class="ml-2 text-red-600 hover:underline"
+                            @click="confirmDelete(t)"
+                        >
+                            Excluir
+                        </button>
                     </td>
                 </tr>
             </tbody>
@@ -300,13 +319,20 @@ const formatRestaurantRating = (summary) => {
                 />
             </div>
 
-            <div class="mt-4">
+            <div class="mt-4 flex flex-wrap items-center gap-3">
                 <Link
                     :href="route('tenant.admin.dashboard', { tenant: selectedTenant.slug })"
                     class="inline-flex items-center rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700"
                 >
                     Painel completo do restaurante
                 </Link>
+                <button
+                    type="button"
+                    class="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50"
+                    @click="confirmDelete(selectedTenant)"
+                >
+                    Excluir restaurante
+                </button>
             </div>
             <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
                 <span class="text-slate-400">Atalhos na plataforma:</span>

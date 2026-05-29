@@ -154,6 +154,16 @@ class TenantController extends Controller
         return back()->with('success', 'Restaurante reativado.');
     }
 
+    public function destroy(Tenant $tenant): RedirectResponse
+    {
+        $name = $tenant->name;
+
+        $tenant->delete();
+
+        return redirect()->route('platform.tenants.index')
+            ->with('success', "Restaurante \"{$name}\" excluído permanentemente.");
+    }
+
     /**
      * @param  array<string, mixed>  $data
      */
