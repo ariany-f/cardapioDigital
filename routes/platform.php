@@ -51,6 +51,13 @@ Route::prefix('platform')->name('platform.')->group(function () {
         Route::get('marketing-leads/{lead}', [MarketingLeadController::class, 'show'])->name('marketing-leads.show');
         Route::put('marketing-leads/{lead}', [MarketingLeadController::class, 'update'])->name('marketing-leads.update');
 
+        Route::get('plan-change-requests', [\App\Http\Controllers\Platform\PlanChangeRequestController::class, 'index'])
+            ->name('plan-change-requests.index');
+        Route::post('plan-change-requests/{planChangeRequest}/approve', [\App\Http\Controllers\Platform\PlanChangeRequestController::class, 'approve'])
+            ->name('plan-change-requests.approve');
+        Route::post('plan-change-requests/{planChangeRequest}/reject', [\App\Http\Controllers\Platform\PlanChangeRequestController::class, 'reject'])
+            ->name('plan-change-requests.reject');
+
         Route::get('plans', [PlanController::class, 'index'])->name('plans.index');
         Route::post('plans', [PlanController::class, 'store'])->name('plans.store');
         Route::put('plans/{plan}', [PlanController::class, 'update'])->name('plans.update');

@@ -95,6 +95,7 @@ class HandleInertiaRequests extends Middleware
             'googleMaps' => PlatformGoogleMaps::forFrontend(),
             'platformTranslations' => [
                 'plans' => __('platform.plans'),
+                'plan_change_requests' => __('platform.plan_change_requests'),
             ],
         ];
     }

@@ -5,9 +5,10 @@ import { useForm } from '@inertiajs/vue3';
 
 defineOptions({ layout: MarketingLayout });
 
-defineProps({
+const props = defineProps({
     seo: Object,
-    plan: Object,
+    plans: { type: Array, default: () => [] },
+    featuredPlan: Object,
     features: Array,
     workflow: Array,
     heroMock: Object,
@@ -17,6 +18,41 @@ defineProps({
     stats: Array,
     testimonials: Array,
 });
+
+const featureLabels = {
+    max_branches: 'Filiais',
+    kds: 'KDS (cozinha)',
+    pos: 'PDV (balcão)',
+    reports: 'Relatórios',
+    delivery_webhooks: 'Integrações de entrega',
+    motoboys: 'Módulo de entregadores',
+};
+
+const planHighlights = (plan) => {
+    const f = plan.features_json ?? {};
+    const rows = [];
+
+    if (f.max_branches != null) {
+        rows.push(`Até ${f.max_branches} filial${f.max_branches === 1 ? '' : 'is'}`);
+    }
+
+    for (const [key, label] of Object.entries(featureLabels)) {
+        if (key === 'max_branches') {
+            continue;
+        }
+        if (f[key]) {
+            rows.push(label);
+        }
+    }
+
+    rows.push('Cardápio e combos por filial');
+    rows.push('Pedidos online');
+    rows.push('PIX no checkout');
+    rows.push('Chat com cliente');
+    rows.push('Suporte incluso');
+
+    return [...new Set(rows)];
+};
 
 const form = useForm({
     restaurant_name: '',
@@ -51,7 +87,7 @@ const submit = () =>
                 <div class="hero-cta">
                     <a href="#contato" class="btn-red">Quero na minha loja</a>
                     <a href="#planos" class="btn-ghost">
-                        {{ plan.name }} · R$ {{ plan.price_formatted }}/mês →
+                        {{ featuredPlan?.name ?? 'Planos' }} · R$ {{ featuredPlan?.price_formatted }}/mês →
                     </a>
                 </div>
                 <ul class="hero-footnotes">
@@ -198,33 +234,39 @@ const submit = () =>
 
     <!-- Planos -->
     <section id="planos" class="section section-white">
-        <div class="marketing-wrap pricing-row">
-            <div class="pricing-copy">
-                <h2 class="section-h2">Um preço fixo. Sem comissão escondida.</h2>
-                <p class="section-lead">
-                    Enquanto marketplaces cobram até 27% por pedido, aqui você paga só a mensalidade e fica com a margem da sua comida.
-                </p>
-                <ul class="pricing-compare">
-                    <li><span>Apps de delivery</span><strong class="text-muted">3% a 27% por pedido</strong></li>
-                    <li><span>App Cardápio</span><strong class="text-brand">só R$ {{ plan.price_formatted }}/mês</strong></li>
-                </ul>
-            </div>
-            <div class="price-box">
-                <p class="price-tag">Plano {{ plan.name }}</p>
-                <p class="price-main">
-                    <span class="price-currency">R$</span>{{ plan.price_formatted }}
-                    <span class="price-period">/mês</span>
-                </p>
-                <ul class="price-list">
-                    <li>Cardápio e combos por filial</li>
-                    <li>Pedidos online + PDV</li>
-                    <li>KDS, painel do entregador e código na entrega</li>
-                    <li>PIX no checkout</li>
-                    <li>Chat com cliente</li>
-                    <li>Suporte incluso</li>
-                </ul>
-                <a href="#contato" class="btn-red btn-block">Solicitar ativação</a>
-                <p class="price-note">Cancele quando quiser · sem fidelidade</p>
+        <div class="marketing-wrap">
+            <h2 class="section-h2">Um preço fixo. Sem comissão escondida.</h2>
+            <p class="section-lead">
+                Enquanto marketplaces cobram até 27% por pedido, aqui você paga só a mensalidade e fica com a margem da sua comida.
+            </p>
+
+            <ul class="pricing-compare pricing-compare-centered">
+                <li><span>Apps de delivery</span><strong class="text-muted">3% a 27% por pedido</strong></li>
+                <li>
+                    <span>App Cardápio</span>
+                    <strong class="text-brand">a partir de R$ {{ featuredPlan?.price_formatted }}/mês</strong>
+                </li>
+            </ul>
+
+            <div class="pricing-plans-grid">
+                <article
+                    v-for="plan in plans"
+                    :key="plan.slug"
+                    class="price-box"
+                    :class="{ 'price-box-featured': plan.is_featured }"
+                >
+                    <p v-if="plan.is_featured" class="price-badge">Menor preço</p>
+                    <p class="price-tag">Plano {{ plan.name }}</p>
+                    <p class="price-main">
+                        <span class="price-currency">R$</span>{{ plan.price_formatted }}
+                        <span class="price-period">/mês</span>
+                    </p>
+                    <ul class="price-list">
+                        <li v-for="item in planHighlights(plan)" :key="item">{{ item }}</li>
+                    </ul>
+                    <a href="#contato" class="btn-red btn-block">Solicitar ativação</a>
+                    <p class="price-note">Cancele quando quiser · sem fidelidade</p>
+                </article>
             </div>
         </div>
     </section>
@@ -916,28 +958,60 @@ const submit = () =>
     color: #9ca3af;
 }
 
-.pricing-row {
-    display: grid;
-    gap: 2.5rem;
-    align-items: start;
-}
-
-@media (min-width: 900px) {
-    .pricing-row {
-        grid-template-columns: 1fr 22rem;
-    }
-}
-
-.pricing-copy .section-h2,
-.pricing-copy .section-lead {
-    text-align: left;
-    margin-left: 0;
-}
-
 .pricing-compare {
     margin-top: 1.5rem;
     padding: 0;
     list-style: none;
+    max-width: 28rem;
+}
+
+.pricing-compare-centered {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.pricing-plans-grid {
+    display: grid;
+    gap: 1.25rem;
+    margin-top: 2.5rem;
+    align-items: stretch;
+}
+
+@media (min-width: 640px) {
+    .pricing-plans-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .pricing-plans-grid {
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    }
+}
+
+.price-box-featured {
+    border-width: 2px;
+    border-color: #f4003a;
+    box-shadow: 0 12px 40px rgb(244 0 58 / 0.12);
+    transform: scale(1.02);
+}
+
+.price-badge {
+    display: inline-block;
+    margin-bottom: 0.5rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    background: #f4003a;
+    color: #fff;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.price-box:not(.price-box-featured) {
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 20px rgb(0 0 0 / 0.06);
 }
 
 .pricing-compare li {
@@ -961,9 +1035,7 @@ const submit = () =>
 .price-box {
     padding: 1.75rem;
     background: #fff;
-    border: 2px solid #f4003a;
     border-radius: 1.5rem;
-    box-shadow: 0 12px 40px rgb(244 0 58 / 0.12);
 }
 
 .price-tag {

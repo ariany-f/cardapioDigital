@@ -70,4 +70,12 @@ return [
         'motoboy_admin_title' => 'Entregadores do seu restaurante',
         'motoboy_admin_body' => 'Você cadastra e gerencia sua própria equipe (ou parceiros). O App Cardápio não fornece motoboys, não valida dados informados (CPF, CNH, veículo etc.) e não garante conduta ou pontualidade. Revise documentos e combine regras diretamente com cada entregador.',
     ],
+
+    'plan_change_requests' => [
+        'page_title' => 'Migrações de plano',
+        'intro' => 'Solicitações dos restaurantes para alterar o plano contratado.',
+        'approve' => 'Aprovar',
+        'reject' => 'Recusar',
+        'admin_notes' => 'Observações (opcional)',
+    ],
 ];

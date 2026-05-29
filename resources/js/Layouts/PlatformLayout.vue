@@ -14,6 +14,7 @@ const nav = [
     { label: 'Clientes', route: 'platform.customers.index', icon: 'users' },
     { label: 'Solicitações', route: 'platform.marketing-leads.index', icon: 'message' },
     { label: 'Planos', route: 'platform.plans.index', icon: 'grid' },
+    { label: 'Migrações de plano', route: 'platform.plan-change-requests.index', icon: 'orders' },
     { label: 'Pagamentos', route: 'platform.payments.index', icon: 'payment' },
     { label: 'Avaliações', route: 'platform.ratings.index', icon: 'chart' },
     { label: 'E-mail (SMTP)', route: 'platform.settings.email', icon: 'message' },

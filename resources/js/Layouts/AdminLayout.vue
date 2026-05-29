@@ -75,6 +75,7 @@ const navItems = computed(() => {
         { label: 'Avaliações', route: 'tenant.admin.ratings.index', permission: 'ratings.manage', icon: 'chart' },
         { label: 'Relatórios', route: 'tenant.admin.reports.index', permission: 'reports.view', icon: 'chart' },
         { label: 'Configurações', route: 'tenant.admin.settings', permission: 'users.manage', icon: 'settings' },
+        { label: 'Plano', route: 'tenant.admin.plan.index', permission: 'users.manage', icon: 'grid' },
         { label: 'Usuários', route: 'tenant.admin.users.index', permission: 'users.manage', icon: 'users' },
     ];
 

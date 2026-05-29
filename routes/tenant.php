@@ -144,6 +144,8 @@ Route::prefix('{tenant}')
                 Route::middleware('permission:users.manage')->group(function () {
                     Route::get('/settings', [TenantSettingsController::class, 'edit'])->name('settings');
                     Route::put('/settings', [TenantSettingsController::class, 'update'])->name('settings.update');
+                    Route::get('/plan', [\App\Http\Controllers\Admin\PlanChangeRequestController::class, 'index'])->name('plan.index');
+                    Route::post('/plan-change-requests', [\App\Http\Controllers\Admin\PlanChangeRequestController::class, 'store'])->name('plan-change-requests.store');
                 });
 
                 Route::middleware('permission:orders.view')->group(function () {

@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Marketing;
 use App\Http\Controllers\Controller;
 use App\Mail\MarketingLeadMail;
 use App\Models\MarketingLead;
-use App\Models\Plan;
 use App\Services\Mail\MailDispatcher;
 use App\Services\SeoService;
 use App\Support\PlatformMarketing;
+use App\Support\MarketingPlans;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,14 +22,13 @@ class LandingController extends Controller
             return redirect()->route('login');
         }
 
-        $planModel = Plan::query()
-            ->where('slug', config('marketing.plan_slug', 'basico'))
-            ->where('is_active', true)
-            ->first();
+        $marketing = MarketingPlans::forLanding();
+        $featuredPlanModel = MarketingPlans::featuredPlanModel();
 
         return Inertia::render('Marketing/Landing', [
-            'seo' => $seo->forMarketing($planModel),
-            'plan' => $this->marketingPlan(),
+            'seo' => $seo->forMarketing($featuredPlanModel),
+            'plans' => $marketing['plans'],
+            'featuredPlan' => $marketing['featured'],
             'heroMock' => [
                 'order_number' => '#1847',
                 'branch' => 'Burger do Zé · Unidade Centro',
@@ -169,38 +168,5 @@ class LandingController extends Controller
         $mail->send(config('marketing.contact_email'), new MarketingLeadMail($lead));
 
         return back()->with('success', 'Recebemos sua mensagem! Entraremos em contato em breve pelo e-mail informado.');
-    }
-
-    /**
-     * @return array{name: string, slug: string, price: float, price_formatted: string}
-     */
-    protected function marketingPlan(): array
-    {
-        $slug = config('marketing.plan_slug', 'basico');
-
-        $plan = Plan::query()
-            ->where('slug', $slug)
-            ->where('is_active', true)
-            ->first();
-
-        if ($plan) {
-            $price = (float) $plan->price_monthly;
-
-            return [
-                'name' => $plan->name,
-                'slug' => $plan->slug,
-                'price' => $price,
-                'price_formatted' => number_format($price, 2, ',', '.'),
-            ];
-        }
-
-        $price = (float) config('marketing.plan_price_monthly');
-
-        return [
-            'name' => config('marketing.plan_name'),
-            'slug' => $slug,
-            'price' => $price,
-            'price_formatted' => number_format($price, 2, ',', '.'),
-        ];
     }
 }

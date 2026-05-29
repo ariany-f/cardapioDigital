@@ -10,6 +10,7 @@ use App\Models\Tenant;
 use Illuminate\Validation\ValidationException;
 use App\Models\TenantSubscription;
 use App\Services\OrderRatingService;
+use App\Services\TenantPlanService;
 use App\Support\TenantFeatures;
 use App\Support\TenantPlanFeatures;
 use App\Support\TenantRegionalOptions;
@@ -26,6 +27,7 @@ class TenantController extends Controller
 
     public function __construct(
         protected OrderRatingService $ratings,
+        protected TenantPlanService $tenantPlans,
     ) {}
 
     public function index(): Response
@@ -133,7 +135,10 @@ class TenantController extends Controller
         ]);
 
         if ($planId) {
-            $this->syncTenantPlan($tenant, $planId);
+            $this->tenantPlans->syncSubscriptionPlan($tenant, $planId);
+            if ($plan) {
+                $this->tenantPlans->alignTenantModulesWithPlan($tenant, $plan);
+            }
         }
 
         $this->applyTenantFeatureFlags($tenant, $data, $planId);
@@ -176,28 +181,6 @@ class TenantController extends Controller
 
         return redirect()->route('platform.tenants.index')
             ->with('success', "Restaurante \"{$name}\" excluído permanentemente.");
-    }
-
-    protected function syncTenantPlan(Tenant $tenant, int $planId): void
-    {
-        $subscription = $tenant->activeSubscription;
-
-        if ($subscription) {
-            if ((int) $subscription->plan_id !== $planId) {
-                $subscription->update(['plan_id' => $planId]);
-            }
-
-            return;
-        }
-
-        TenantSubscription::create([
-            'tenant_id' => $tenant->id,
-            'plan_id' => $planId,
-            'current_period_start' => now()->startOfMonth(),
-            'current_period_end' => now()->endOfMonth(),
-            'payment_status' => 'pending',
-            'status' => 'active',
-        ]);
     }
 
     /**

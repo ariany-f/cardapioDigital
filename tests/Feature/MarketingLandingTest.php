@@ -14,7 +14,7 @@ class MarketingLandingTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_landing_page_renders_plan_price_from_database(): void
+    public function test_landing_page_renders_all_active_plans_with_cheapest_featured(): void
     {
         $this->seed(PlatformSeeder::class);
 
@@ -22,14 +22,32 @@ class MarketingLandingTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Marketing/Landing')
-                ->where('plan.slug', 'basico')
-                ->where('plan.name', 'Básico')
-                ->where('plan.price', 29.9));
+                ->has('plans', 3)
+                ->where('featuredPlan.slug', 'basico')
+                ->where('featuredPlan.is_featured', true)
+                ->where('plans.0.slug', 'basico')
+                ->where('plans.0.is_featured', true)
+                ->where('plans.0.price', 29.9)
+                ->where('plans.1.slug', 'pro')
+                ->where('plans.2.slug', 'enterprise'));
 
-        Plan::where('slug', 'basico')->update(['price_monthly' => 39.90]);
+        Plan::where('slug', 'basico')->update(['price_monthly' => 499.90]);
 
         $this->get('/')
-            ->assertInertia(fn ($page) => $page->where('plan.price', 39.9));
+            ->assertInertia(fn ($page) => $page
+                ->where('featuredPlan.slug', 'pro')
+                ->where('plans.0.slug', 'pro')
+                ->where('plans.0.is_featured', true));
+    }
+
+    public function test_inactive_plans_are_not_shown_on_landing(): void
+    {
+        $this->seed(PlatformSeeder::class);
+
+        Plan::where('slug', 'enterprise')->update(['is_active' => false]);
+
+        $this->get('/')
+            ->assertInertia(fn ($page) => $page->has('plans', 2));
     }
 
     public function test_contact_form_sends_email(): void
